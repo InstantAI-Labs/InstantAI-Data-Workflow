@@ -1,0 +1,50 @@
+version: instant-pii-v1
+enabled: true
+mode: structural_only
+
+thresholds:
+  accept: 0.20
+  redact: 0.60
+  reject: 0.90
+  hard_reject: 0.95
+
+entity_types:
+  - PERSON
+  - ORGANIZATION
+  - ADDRESS
+  - EMAIL
+  - PHONE
+  - ACCOUNT_ID
+  - FINANCIAL_ID
+  - CREDENTIAL
+
+scoring_weights:
+  entities: 0.40
+  secrets: 0.38
+  context: 0.22
+
+ner:
+  enabled: false
+
+secrets:
+  min_entropy: 3.2
+  min_token_len: 12
+  max_token_len: 512
+  min_secret_score: 0.55
+
+context:
+  enabled: true
+  example_dampening: 0.78
+  documentation_dampening: 0.72
+  min_confidence: 0.40
+
+redaction:
+  enabled: true
+
+validation:
+  min_detection_rate: 0.95
+  max_false_positive_rate: 0.03
+  max_false_negative_rate: 0.03
+
+reporting:
+  output_dir: artifacts/data/pii

@@ -1,0 +1,125 @@
+meta:
+  id: data/filtering/quality_smoke_5mb
+  purpose: 7 MB pipeline smoke test — full cleaning, moderate quality floor for visible output
+  target_bytes: 7000000
+
+deduplication: true
+language_detection: true
+quality_scoring: true
+tokenizer_validation: false
+observability: true
+
+sample_scores: 500
+
+cleaning:
+  enabled: true
+  chars_per_token_estimate: 4.0
+  stages:
+    html_cleaning: true
+    ui_noise_removal: true
+    metadata_removal: true
+    content_compression: true
+  qa_extraction:
+    enabled: true
+    max_extra_answers: 1
+  segmentation:
+    enabled: true
+    min_tokens: 1000
+    max_tokens: 3000
+    chunk_overlap_ratio: 0.12
+    min_words: 200
+    max_words: 1500
+    hard_max_chars: 16000
+  thresholds:
+    min_chars_after_clean: 300
+    max_ui_noise_ratio: 0.45
+    max_boilerplate_ratio: 0.55
+    max_duplicate_ratio: 0.35
+  dedupe_paragraphs: true
+  drop_acknowledgements: true
+  drop_moderator_notices: true
+  drop_quoted_replies: true
+  preserve_code_fences: true
+
+adaptive_calibration:
+  enabled: true
+  warmup_samples: 50
+
+thresholds:
+  min_score: 0.0
+  high_quality_only: false
+  max_toxicity: 0.45
+  max_pii_score: 0.45
+  max_truncation_score: 0.45
+  max_boilerplate_score: 0.35
+  max_commercial_score: 0.32
+  max_seo_spam_score: 0.30
+  max_low_information_score: 0.40
+  max_software_piracy_score: 0.18
+  min_informative_density: 0.015
+  max_repetition: 0.60
+  max_token_spam_score: 0.45
+  min_structural_quality: 0.30
+  min_coherence_score: 0.25
+
+dedup:
+  exact: true
+  fuzzy: true
+  fuzzy_threshold: 0.90
+  semantic: false
+
+balance:
+  enabled: true
+  soft_cap_overflow: 0.20
+  quality_cap_bypass_score: 0.82
+  domain_caps:
+    web: 0.55
+    docs: 0.25
+    wiki: 0.30
+    code: 0.30
+    reasoning: 0.20
+    qa: 0.25
+    conversation: 0.10
+  language_caps:
+    en: 0.85
+    other: 0.20
+
+semantic_selection:
+  enabled: true
+  prefer_keep: true
+  min_information_rich_overall: 0.40
+  min_information_rich_educational: 0.32
+  min_information_rich_technical: 0.28
+  hard_reject_commercial_score: 0.55
+  hard_reject_entertainment_score: 0.52
+  downrank_entertainment_score: 0.35
+
+curriculum:
+  enabled: false
+
+language:
+  enabled: true
+  fast_detector_only: true
+  allow:
+    - en
+
+toxicity:
+  enabled: true
+  mode: rules_only
+  classifier_enabled: false
+
+pii:
+  enabled: true
+  mode: structural_only
+  ner_enabled: false
+
+corpus_evaluation:
+  enabled: true
+  lightweight: true
+
+observability:
+  enabled: true
+
+telemetry:
+  enabled: true
+  output_dir: artifacts/reports/data/quality

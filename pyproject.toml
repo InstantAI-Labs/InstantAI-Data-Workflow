@@ -1,0 +1,82 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "indw"
+version = "1.0"
+description = "INDW — Instant Data Workflow: corpus ingestion, quality filtering, semantic cleaning, deduplication, and deterministic merge scheduling"
+readme = "README.md"
+license = { text = "Apache-2.0" }
+license-files = ["LICENSE", "NOTICE"]
+requires-python = ">=3.10"
+authors = [{ name = "INDW Contributors" }]
+keywords = ["indw", "nlp", "corpus", "data-pipeline", "dedup", "ml-data"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "numpy>=1.24.0",
+    "pyyaml>=6.0",
+    "tqdm>=4.66.0",
+    "orjson>=3.9.0",
+    "cachetools>=5.3.0",
+    "tenacity>=8.2.0",
+    "trafilatura>=2.0.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "pytest-cov>=5.0", "pytest-xdist>=3.5"]
+language = ["langid>=1.1.6"]
+dedup = ["datasketch>=1.6.0"]
+ann = ["faiss-cpu>=1.7.4"]
+compress = ["zstandard>=0.22.0"]
+embedding = ["sentence-transformers>=2.2.0"]
+distributed = ["dask>=2024.1.0", "distributed>=2024.1.0"]
+monitor = [
+    "prometheus_client>=0.20.0",
+    "opentelemetry-api>=1.24.0",
+    "opentelemetry-sdk>=1.24.0",
+]
+all = ["indw[dev,language,dedup,ann,compress,embedding,distributed,monitor]"]
+
+[project.scripts]
+indw = "app.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/indw/indw"
+Documentation = "https://github.com/indw/indw/blob/main/docs/README.md"
+Repository = "https://github.com/indw/indw"
+
+[tool.setuptools.packages.find]
+where = ["src", "."]
+include = ["indw*", "app*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-ra --strict-markers --tb=short"
+markers = [
+    "integration: cross-subsystem tests",
+    "slow: long-running tests",
+    "smoke: end-to-end smoke",
+    "critical: production-critical coverage",
+    "property: deterministic invariants",
+    "benchmark: throughput validation",
+    "certification: production certification",
+]
+
+[tool.coverage.run]
+source = ["indw", "app"]
+omit = ["tests/*"]
+
+[tool.coverage.report]
+fail_under = 55
+show_missing = true

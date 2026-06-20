@@ -1,0 +1,74 @@
+meta:
+  id: data/licensing/sources
+  description: Source and domain license lookup tables
+
+wikipedia_prefix:
+  license: CC-BY-SA
+  confidence: 0.95
+
+government_domain:
+  license: Public Domain
+  confidence: 0.92
+
+source_licenses:
+  wikipedia-en: {license: CC-BY-SA, confidence: 0.98}
+  wikipedia-de: {license: CC-BY-SA, confidence: 0.98}
+  wikipedia-es: {license: CC-BY-SA, confidence: 0.98}
+  wikipedia-fr: {license: CC-BY-SA, confidence: 0.98}
+  wikipedia-hi: {license: CC-BY-SA, confidence: 0.98}
+  wikipedia-ar: {license: CC-BY-SA, confidence: 0.98}
+  wikipedia-zh: {license: CC-BY-SA, confidence: 0.98}
+  wikipedia-ja: {license: CC-BY-SA, confidence: 0.98}
+  wikipedia-ko: {license: CC-BY-SA, confidence: 0.98}
+  wikimedia/wikipedia: {license: CC-BY-SA, confidence: 0.98}
+  HuggingFaceFW/fineweb-edu: {license: Unknown, confidence: 0.0}
+  HuggingFaceFW/fineweb: {license: Unknown, confidence: 0.0}
+  HuggingFaceTB/cosmopedia: {license: Unknown, confidence: 0.0}
+  bigcode/the-stack: {license: Unknown, confidence: 0.0}
+  bigcode/starcoderdata: {license: Unknown, confidence: 0.0}
+
+domain_licenses:
+  gutenberg.org: {license: Public Domain, confidence: 0.97}
+  gutendex.com: {license: Public Domain, confidence: 0.90}
+  archive.org: {license: Unknown, confidence: 0.0}
+  wikipedia.org: {license: CC-BY-SA, confidence: 0.98}
+  wikimedia.org: {license: CC-BY-SA, confidence: 0.98}
+  wikidata.org: {license: CC0, confidence: 0.95}
+  github.com: {license: Unknown, confidence: 0.0}
+  gitlab.com: {license: Unknown, confidence: 0.0}
+  sourceforge.net: {license: Unknown, confidence: 0.0}
+  gitlab.io: {license: Unknown, confidence: 0.0}
+
+gov_tld_suffixes:
+  - .gov
+  - .gov.uk
+  - .gc.ca
+  - .gov.au
+  - .gouv.fr
+  - .go.jp
+
+repo_hosts:
+  - github.com
+  - gitlab.com
+  - sourceforge.net
+
+book_hosts:
+  - gutenberg.org
+  - archive.org
+  - gutendex.com
+  - standardebooks.org
+  - manybooks.net
+
+pd_book_domains:
+  - gutenberg.org
+  - standardebooks.org
+
+text_patterns:
+  news_host: "(?i)(?:(?:nytimes|washingtonpost|wsj|ft\\.com|reuters|apnews|bbc|cnn|theguardian)|(?:news|herald|tribune|gazette|chronicle|post|times)\\.)"
+  paywall: "(?i)\\b(?:subscribe\\s+to\\s+(?:read|continue|unlock)|this\\s+content\\s+is\\s+for\\s+subscribers|premium\\s+subscriber|paywall|sign\\s+in\\s+to\\s+(?:read|view)\\s+(?:this|the)\\s+(?:article|story)|members\\s+only\\s+content)\\b"
+  drm: "(?i)\\b(?:drm[\\s-]protected|digital\\s+rights\\s+management|circumvent\\s+drm|remove\\s+drm|kindle\\s+drm|adobe\\s+drm)\\b"
+  redistribution_prohibited: "(?i)\\b(?:redistribution\\s+(?:is\\s+)?(?:prohibited|not\\s+permitted|forbidden)|may\\s+not\\s+be\\s+(?:reproduced|redistributed|copied)|no\\s+part\\s+of\\s+this\\s+(?:publication|work|book)\\s+may\\s+be\\s+(?:reproduced|copied))\\b"
+  proprietary_notice: "(?i)\\b(?:(?:©|copyright)\\s*\\d{4}.*all\\s+rights\\s+reserved|proprietary\\s+and\\s+confidential|unauthorized\\s+(?:reproduction|distribution|copying))\\b"
+  syndicated: "(?i)\\b(?:(?:ap|reuters|afp|bloomberg)\\s+(?:wire|syndicate)|syndicated\\s+(?:from|by)|(?:©|copyright)\\s*(?:ap|reuters|afp))\\b"
+  pd_book_markers: "(?i)\\b(?:project\\s+gutenberg|public\\s+domain\\s+ebook|this\\s+ebook\\s+is\\s+for\\s+the\\s+use\\s+of\\s+anyone|released\\s+into\\s+the\\s+public\\s+domain)\\b"
+  commercial_book: "(?i)\\b(?:isbn[\\s:-]*[\\d\\-xX]{10,17}|(?:hardcover|paperback|ebook)\\s+edition|published\\s+by\\s+(?:penguin|random\\s+house|harper|simon|macmillan|scholastic))\\b"

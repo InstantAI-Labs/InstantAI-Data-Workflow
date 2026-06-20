@@ -1,0 +1,52 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+*.egg
+MANIFEST
+wheels/
+
+# tests / coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.hypothesis/
+
+# type checkers / linters
+.mypy_cache/
+.ruff_cache/
+.pytype/
+
+# environments
+.venv/
+venv/
+env/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# runtime / generated reports
+artifacts/
+reports/
+*.json
+!configs/**/*.yaml
+production_scale_audit.*
+stage0_production_verify_report.*
+*.log
+
+# OS
+.DS_Store
+Thumbs.db

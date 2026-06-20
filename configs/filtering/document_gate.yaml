@@ -1,0 +1,42 @@
+meta:
+  id: data/filtering/document_gate
+  description: Document gate rejection thresholds and scoring weights
+
+corruption:
+  max_replacement_chars: 5
+  min_keyboard_smash_hits: 3
+  alpha_floor: 0.25
+  repl_char_divisor: 200
+  ctrl_char_divisor: 500
+  smash_hit_weight: 0.25
+  word_count_smash_divisor: 50
+
+html:
+  tag_weight: 8
+  dom_hit_weight: 40
+  min_tags_floor: 3
+
+navigation:
+  meaningful_short_multiplier: 2.5
+
+disambiguation:
+  min_list_lines: 4
+  short_bound_line_multiplier: 4.0
+
+seo:
+  keyword_stuffing_multiplier: 1.05
+  transaction_ratio_multiplier: 0.75
+  link_density_word_divisor: 40
+  meaningful_short_multiplier: 4.0
+
+ai_filler:
+  discourse_template_multiplier: 0.85
+  low_information_multiplier: 0.70
+  min_filler_density: 0.22
+  meaningful_short_multiplier: 5.0
+
+short_junk:
+  max_lines: 3
+
+artifact:
+  advertisement_commercial_multiplier: 0.85

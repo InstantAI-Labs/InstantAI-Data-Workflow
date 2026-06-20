@@ -1,0 +1,28 @@
+services:
+  indw:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.dev
+    volumes:
+      - ..:/workspace
+    environment:
+      INSTANT_PIPELINE_BACKEND: multiprocess
+      INSTANT_MERGE_HW_PROBE: "0"
+
+  dask-scheduler:
+    profiles: [dask]
+    image: ghcr.io/dask/dask:2024.1.0-py3.11
+    command: dask scheduler
+    ports:
+      - "8786:8786"
+      - "8787:8787"
+
+  dask-worker:
+    profiles: [dask]
+    image: ghcr.io/dask/dask:2024.1.0-py3.11
+    command: dask worker tcp://dask-scheduler:8786
+    depends_on:
+      - dask-scheduler
+    environment:
+      INSTANT_PIPELINE_BACKEND: dask
+      DASK_SCHEDULER_ADDRESS: tcp://dask-scheduler:8786
