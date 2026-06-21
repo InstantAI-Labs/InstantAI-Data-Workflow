@@ -1,0 +1,62 @@
+{
+  "order": [
+    "Getting started",
+    "Architecture",
+    "Guides",
+    "CLI",
+    "Configuration",
+    "Reference",
+    "Developer",
+    "Resources"
+  ],
+  "pages": {
+    "Getting started": [
+      "overview",
+      "installation",
+      "quickstart",
+      "configuration",
+      "first-pipeline"
+    ],
+    "Architecture": [
+      "overview",
+      "execution-graph",
+      "scheduler",
+      "stage0",
+      "storage",
+      "scaling"
+    ],
+    "Guides": [
+      "ingestion",
+      "filtering",
+      "cleaning",
+      "deduplication",
+      "distributed",
+      "semantic",
+      "dask",
+      "intelligence",
+      "scheduler",
+      "storage"
+    ],
+    "CLI": [
+      "commands",
+      "workflows"
+    ],
+    "Configuration": [
+      "datasets",
+      "environments",
+      "outputs",
+      "pipeline"
+    ],
+    "Reference": [
+      "api",
+      "cli-reference",
+      "configuration-reference"
+    ],
+    "Developer": [
+      "contributing",
+      "custom-stages",
+      "extensions",
+      "testing"
+    ]
+  }
+}

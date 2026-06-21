@@ -1,0 +1,10 @@
+{
+  "name": "indw",
+  "version": "1.0",
+  "status": "Beta",
+  "framework": "python",
+  "description": "Instant Data Workflow",
+  "repository": "https://github.com/indw/indw.git",
+  "branch": "main",
+  "docsPath": "docs/data-workflow"
+}
