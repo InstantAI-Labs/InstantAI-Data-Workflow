@@ -1,0 +1,141 @@
+---
+title: "CLI Commands"
+description: "Reference for all INDW CLI commands: merge, validate, test, audit, benchmark, and doctor."
+order: 1
+sectionOrder: 5
+---
+
+# CLI Commands
+
+INDW provides six CLI commands for pipeline execution, validation, auditing, and diagnostics. All commands are invoked via the `indw` entry point.
+
+```bash
+indw --help
+```
+
+## Command summary
+
+| Command | Purpose | Stability |
+|---------|---------|-----------|
+| `indw merge` | Run quality merge on raw corpus | <InlineBadge variant="success">stable</InlineBadge> |
+| `indw validate` | Parity and acceptance validation | <InlineBadge variant="success">stable</InlineBadge> |
+| `indw test` | Run framework test suite | <InlineBadge variant="success">stable</InlineBadge> |
+| `indw audit` | Operational audit reports | <InlineBadge variant="success">stable</InlineBadge> |
+| `indw benchmark` | Production scale benchmark | <InlineBadge variant="success">stable</InlineBadge> |
+| `indw doctor` | Verify install and dependencies | <InlineBadge variant="success">stable</InlineBadge> |
+
+## indw merge
+
+Run the quality merge pipeline on a raw corpus directory.
+
+```bash
+indw merge <raw_dir> <out_path> [options]
+```
+
+| Argument / Flag | Type | Default | Description |
+|-----------------|------|---------|-------------|
+| `raw_dir` | Path | required | Directory with `*/data.jsonl` sources |
+| `out_path` | Path | required | Output JSONL path |
+| `--work-dir` | Path | `out_path.parent` | Checkpoints and audit artifacts |
+| `--workers` | int | `1` | Parallel worker count |
+| `--chunk-size` | int | `500` | Documents per dispatch batch |
+| `--fresh` | flag | off | Clear checkpoints, start clean |
+| `--backend` | choice | env default | `local`, `thread`, `multiprocess`, `dask` |
+
+```bash
+indw merge ./raw ./out/filtered.jsonl --work-dir ./work --workers 4 --fresh
+indw merge ./raw ./out/filtered.jsonl --backend dask --workers 16
+```
+
+## indw validate
+
+Run the parity acceptance suite. Equivalent to `indw test --profile parity`.
+
+```bash
+indw validate [pytest_args...]
+```
+
+Verifies:
+- Local vs multiprocess backend output hash match
+- Workers=1 vs workers=N hash match
+- Tier admission consistency
+
+## indw test
+
+Run the framework test suite with selectable profiles.
+
+```bash
+indw test [--profile PROFILE] [pytest_args...]
+```
+
+| Profile | Markers | Scope |
+|---------|---------|-------|
+| `unit` | `not integration and not slow` | Fast unit tests (default) |
+| `critical` | `critical and not integration` | Production-critical subsystem tests |
+| `parity` | `integration` | Backend parity tests |
+| `integration` | `integration or slow` | Full integration suite |
+| `smoke` | `smoke` | End-to-end smoke tests |
+
+```bash
+indw test --profile critical
+indw test --profile unit -k test_stage0
+```
+
+## indw audit
+
+Run operational audit reports against pipeline artifacts.
+
+```bash
+indw audit [--kind KIND] [--work-dir PATH] [--workers N]
+```
+
+| Kind | Script | Purpose |
+|------|--------|---------|
+| `pipeline` | `pipeline_audit.py` | Architecture and throughput from work dir |
+| `dask` | `dask_integration_report.py` | Dask cluster integration health |
+| `production` | `production_scale_audit.py` | Production certification benchmarks |
+| `library` | `library_migration_report.py` | Dependency migration audit |
+| `stage0` | `stage0_production_verify.py` | Stage0 throughput verification |
+
+```bash
+indw audit --kind pipeline --work-dir ./work
+indw audit --kind production
+indw audit --kind stage0 --workers 8
+```
+
+## indw benchmark
+
+Run production scale benchmarks at multiple worker counts.
+
+```bash
+indw benchmark
+```
+
+Equivalent to `indw audit --kind production`. Tests throughput at workers 1 and 2 by default.
+
+## indw doctor
+
+Verify installation, Python version, and dependency availability.
+
+```bash
+indw doctor
+```
+
+Output example:
+
+```
+indw=1.0 python=3.11.8 platform=Linux-...
+backend=multiprocess resolved=multiprocess
+orjson=ok
+trafilatura=ok
+dask=ok
+```
+
+<Callout type="tip" title="Exit codes">
+  All commands return exit code 0 on success and non-zero on failure. Use in CI pipelines: `indw validate && indw audit --kind production`.
+</Callout>
+
+<NextSteps links={[
+  { title: "CLI Reference", href: "/docs/data-workflow/reference/cli-reference", description: "Detailed flag reference and environment variable precedence." },
+  { title: "Workflows", href: "/docs/data-workflow/cli/workflows", description: "Common operational workflows and CI patterns." }
+]} />

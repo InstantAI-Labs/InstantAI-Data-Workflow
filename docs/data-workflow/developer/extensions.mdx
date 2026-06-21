@@ -1,0 +1,130 @@
+---
+title: "Extensions"
+description: "INDW optional capability extras: language detection, dedup, embeddings, distributed, and monitoring."
+order: 3
+sectionOrder: 8
+---
+
+# Extensions
+
+INDW uses optional dependency extras to keep the base install lightweight. Install only the capabilities your pipeline requires.
+
+## Installing extras
+
+```bash
+pip install "indw[language]"        # language detection
+pip install "indw[dedup]"           # fuzzy MinHash dedup
+pip install "indw[ann,embedding]"   # semantic dedup
+pip install "indw[distributed]"     # Dask backend
+pip install "indw[monitor]"         # Prometheus + OpenTelemetry
+pip install "indw[compress]"        # ZSTD compression
+pip install "indw[all]"             # everything
+```
+
+Development install with all extras:
+
+```bash
+pip install -e ".[all]"
+```
+
+## Extra reference
+
+| Extra | Packages | Unlocks |
+|-------|----------|---------|
+| `language` | langid | `LanguagePolicyConfig`, fast language detection |
+| `dedup` | datasketch | MinHash fuzzy dedup LSH |
+| `ann` | faiss-cpu | FAISS ANN index for semantic dedup |
+| `embedding` | sentence-transformers | Embedding providers for semantic dedup |
+| `distributed` | dask, distributed | `dask` execution backend |
+| `monitor` | prometheus_client, opentelemetry-* | Metrics and tracing hooks |
+| `compress` | zstandard | ZSTD-compressed I/O streams |
+| `dev` | pytest, pytest-cov, pytest-xdist | Test suite |
+
+## Language detection
+
+```bash
+pip install "indw[language]"
+```
+
+```yaml
+language:
+  enabled: true
+  fast_detector_only: true   # langid only, no ML model
+  english_only: false
+```
+
+Without the `language` extra, language gating is disabled and all documents pass the language check.
+
+## Fuzzy dedup
+
+```bash
+pip install "indw[dedup]"
+```
+
+```yaml
+dedup:
+  fuzzy: true
+  fuzzy_threshold: 0.90
+  fuzzy_num_perm: 128
+```
+
+## Semantic dedup
+
+```bash
+pip install "indw[ann,embedding]"
+```
+
+```yaml
+dedup:
+  semantic: true
+  embedding:
+    model: "sentence-transformers/all-MiniLM-L6-v2"
+    batch_size: 64
+    device: "cpu"    # or "cuda"
+```
+
+## Distributed execution
+
+```bash
+pip install "indw[distributed]"
+```
+
+Enables `INSTANT_PIPELINE_BACKEND=dask`. Verify with:
+
+```bash
+indw doctor        # dask=ok
+indw audit --kind dask
+```
+
+## Monitoring
+
+```bash
+pip install "indw[monitor]"
+```
+
+```yaml
+observability:
+  enabled: true
+telemetry:
+  enabled: true
+  output_dir: artifacts/reports/data/quality
+```
+
+Enables Prometheus metrics export and OpenTelemetry tracing hooks in the scheduler and stage pools.
+
+## Verifying extras
+
+```bash
+indw doctor
+```
+
+Doctor reports `ok` or `missing` for `orjson`, `trafilatura`, and `dask`. For other extras, attempt the relevant operation and check for `ImportError`.
+
+<Callout type="tip" title="Minimal production install">
+  For most production pipelines: `pip install "indw[language,dedup,distributed]"`. Add `ann` and `embedding` only when semantic dedup is enabled in your quality profile.
+</Callout>
+
+<NextSteps links={[
+  { title: "Installation", href: "/docs/data-workflow/getting-started/installation", description: "Full install instructions." },
+  { title: "Distributed Guide", href: "/docs/data-workflow/guides/distributed", description: "Using the distributed extra with Dask." }
+]} />

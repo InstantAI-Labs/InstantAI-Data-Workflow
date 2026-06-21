@@ -1,0 +1,147 @@
+---
+title: "Distributed Execution"
+description: "Scale INDW pipelines to Dask clusters and multiprocess workers without changing pipeline logic."
+order: 5
+sectionOrder: 4
+---
+
+# Distributed Execution
+
+INDW scales horizontally through execution backends. The same pipeline logic runs on a laptop or a Dask cluster — only the transport layer changes.
+
+## Backends
+
+| Backend | Env value | Workers | Best for |
+|---------|-----------|---------|----------|
+| `local` | `INSTANT_PIPELINE_BACKEND=local` | 1 | Debugging, tracing |
+| `thread` | `INSTANT_PIPELINE_BACKEND=thread` | N threads | I/O-bound ingest |
+| `multiprocess` | Default | N processes | CPU-bound cleaning (default) |
+| `dask` | `INSTANT_PIPELINE_BACKEND=dask` | Cluster | 100GB+ corpora |
+
+```bash
+indw doctor  # shows resolved backend
+```
+
+## Multiprocess scaling
+
+Increase worker count on a single machine:
+
+```bash
+indw merge ./raw ./out/filtered.jsonl --workers 8 --backend multiprocess
+```
+
+Output hash remains stable across worker counts when configuration is unchanged. Verify with:
+
+```bash
+indw validate
+```
+
+## Dask cluster
+
+Install distributed support:
+
+```bash
+pip install "indw[distributed]"
+```
+
+Connect to a running Dask scheduler:
+
+```bash
+export INSTANT_PIPELINE_BACKEND=dask
+export INSTANT_DASK_SCHEDULER=tcp://scheduler:8786
+indw merge ./raw ./out/filtered.jsonl --workers 16
+```
+
+Or use the standard Dask env var:
+
+```bash
+export DASK_SCHEDULER_ADDRESS=tcp://scheduler:8786
+```
+
+### Example: local Dask cluster
+
+```python
+from dask.distributed import Client
+import os
+
+client = Client(n_workers=4, threads_per_worker=2)
+os.environ["INSTANT_PIPELINE_BACKEND"] = "dask"
+os.environ["INSTANT_DASK_SCHEDULER"] = client.scheduler.address
+
+from indw.schedule import merge_with_quality
+merge_with_quality("./raw", "./out/filtered.jsonl", workers=8, work_dir="./work")
+```
+
+See `examples/merge_dask.py` for a complete example.
+
+## Backend resolution
+
+```python
+from indw.schedule.backends.config import pipeline_execution_backend
+from indw.schedule.backends.factory import resolve_execution_backend
+
+print(pipeline_execution_backend())  # "multiprocess"
+print(resolve_execution_backend().name)  # resolved backend instance
+```
+
+Aliases are normalized automatically:
+
+| Input | Resolved |
+|-------|----------|
+| `mp`, `process`, `spawn` | `multiprocess` |
+| `threads`, `threaded` | `thread` |
+| `sync`, `inline`, `direct` | `local` |
+| `distributed`, `cluster` | `dask` |
+
+## Chunk size tuning
+
+```bash
+indw merge ./raw ./out/filtered.jsonl --workers 8 --chunk-size 1000
+```
+
+| Chunk size | Effect |
+|------------|--------|
+| 100–250 | Lower latency, higher dispatch overhead |
+| 500 (default) | Balanced for most corpora |
+| 1000–2000 | Higher throughput, more memory per batch |
+
+## Dask audit
+
+Verify Dask integration health:
+
+```bash
+indw audit --kind dask
+```
+
+This runs `dask_integration_report.py` to test task serialization, worker connectivity, and result collection.
+
+## Production certification
+
+```bash
+indw audit --kind production
+indw benchmark
+```
+
+Production audit runs scale benchmarks at workers 1 and 2, verifying throughput and hash stability.
+
+<Callout type="tip" title="Hash stability">
+  Output hash is stable across worker counts and backends. Run `indw validate` after changing worker configuration to confirm parity on your acceptance corpus.
+</Callout>
+
+<FeatureGrid>
+  <FeatureCard
+    icon="rocket"
+    title="Zero logic changes"
+    description="Pipeline stages, gates, and dedup logic are identical across all backends."
+  />
+  <FeatureCard
+    icon="chart"
+    title="Hardware probe"
+    description="Set INSTANT_MERGE_HW_PROBE=1 to auto-tune workers and chunk size from available CPU and memory."
+  />
+</FeatureGrid>
+
+<NextSteps links={[
+  { title: "Scheduler", href: "/docs/data-workflow/architecture/scheduler", description: "How the scheduler dispatches batches to backends." },
+  { title: "Environments", href: "/docs/data-workflow/configuration/environments", description: "Cluster deployment configuration." }
+]} />

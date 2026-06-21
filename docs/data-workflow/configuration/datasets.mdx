@@ -1,0 +1,129 @@
+---
+title: "Datasets"
+description: "Configure source registries, mixture weights, and multi-source dataset definitions for INDW pipelines."
+order: 1
+sectionOrder: 6
+---
+
+# Datasets
+
+INDW datasets are collections of JSONL sources under `raw/<name>/data.jsonl`. Source registries, mixture weights, and domain maps control how multiple datasets are interleaved and balanced during merge.
+
+## Source directory convention
+
+```
+raw/
+├── wiki-en/
+│   └── data.jsonl
+├── common-crawl/
+│   └── data.jsonl
+└── github-code/
+    └── data.jsonl
+```
+
+The directory name (`wiki-en`, `common-crawl`) is the source identifier used in checkpoints, mixture weights, and balance enforcement.
+
+## Source registry
+
+Domain classification maps sources to content domains for balance caps:
+
+```yaml
+# configs/sources/domain_map.yaml
+wiki-en: wiki
+common-crawl: web
+github-code: code
+```
+
+`load_source_registry` resolves source metadata at merge bootstrap. Domain assignment feeds into `BalanceConfig.domain_caps`.
+
+## Mixture weights
+
+Control interleaving frequency with per-source weights:
+
+```python
+# Weights are integer multipliers in the interleave schedule
+mix_weights = {"wiki-en": 3, "common-crawl": 5, "github-code": 2}
+# Schedule: wiki, crawl, crawl, code, wiki, crawl, crawl, wiki, ...
+```
+
+Weights are loaded from orchestration config or derived from balance domain caps.
+
+## Hugging Face source definition
+
+```yaml
+meta:
+  id: my-training-corpus
+  purpose: english pretraining mix
+
+sources:
+  - name: wiki-en
+    type: huggingface
+    dataset: wikimedia/wikipedia
+    config: "20231101.en"
+    split: train
+    text_field: text
+
+  - name: openwebtext
+    type: huggingface
+    dataset: Skylion007/openwebtext
+    split: train
+    text_field: text
+```
+
+Pass this to `FastDatasetPipeline.run()` or `DatasetDownloader.fetch_all()`.
+
+## Source filtering
+
+Process a subset of sources in a merge run:
+
+```python
+merge_with_quality(
+    "./raw", "./out/filtered.jsonl",
+    source_filter=["wiki-en", "common-crawl"],
+    work_dir="./work",
+)
+```
+
+## Multilingual sources
+
+Enable multilingual detection and per-language balance caps:
+
+```yaml
+multilingual:
+  enabled: true
+
+language:
+  enabled: true
+  english_only: false
+
+balance:
+  language_caps:
+    en: 0.75
+    es: 0.10
+    de: 0.08
+    fr: 0.08
+    other: 0.20
+```
+
+`corpus_has_multilingual_sources` detects multilingual corpora and adjusts language gate behavior.
+
+## Corpus registry
+
+Track dataset identity across pipeline phases:
+
+```python
+from indw.store.corpus.registry import CorpusRegistry
+
+corpus = CorpusRegistry("./work", corpus_id="pretrain-v3")
+```
+
+The registry persists manifests linking sources, document counts, and quality statistics.
+
+<Callout type="tip" title="Source naming">
+  Use descriptive source names that encode content type and language (e.g. `wiki-en`, `crawl-2024-q1`). Names appear in reject logs, audit reports, and checkpoint state.
+</Callout>
+
+<NextSteps links={[
+  { title: "Ingestion Guide", href: "/docs/data-workflow/guides/ingestion", description: "Download and normalize raw sources." },
+  { title: "Pipeline Configuration", href: "/docs/data-workflow/configuration/pipeline", description: "Balance caps and orchestration settings." }
+]} />

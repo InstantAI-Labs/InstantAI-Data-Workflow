@@ -1,0 +1,92 @@
+---
+title: "Contributing"
+description: "How to contribute to INDW: development setup, code standards, and pull request process."
+order: 1
+sectionOrder: 8
+---
+
+# Contributing
+
+INDW welcomes contributions to pipeline stages, quality profiles, documentation, and test coverage. All pipeline changes must preserve determinism and backend parity.
+
+## Development setup
+
+```bash
+git clone https://github.com/indw/indw.git
+cd indw
+pip install -e ".[dev,language,dedup,distributed]"
+indw doctor
+```
+
+## Before submitting
+
+Run the validation suite:
+
+```bash
+indw test --profile unit
+indw test --profile critical
+indw validate
+```
+
+For pipeline logic changes, also run:
+
+```bash
+indw test --profile parity
+indw audit --kind pipeline --work-dir ./examples/work
+```
+
+## Code standards
+
+- Preserve determinism: same config + input = same output hash
+- Backend-agnostic stage logic: no backend-specific code in stage pools
+- Operational readability: short names, no tutorial comments
+- Type annotations on public APIs and configuration boundaries
+- Tests for new gates, thresholds, and stage behavior
+
+## Pull request checklist
+
+- [ ] `indw test --profile unit` passes
+- [ ] `indw test --profile critical` passes (for pipeline changes)
+- [ ] `indw validate` passes (for scheduler/filter/clean changes)
+- [ ] New behavior has test coverage in `tests/subsystems/`
+- [ ] Quality profile changes documented if user-facing
+- [ ] No secrets or credentials in committed files
+
+## Project structure
+
+```
+src/indw/
+├── ingest/      # Download and format normalization
+├── filter/      # Stage0, quality gates, PII, toxicity
+├── clean/       # Semantic cleaning, artifact discovery
+├── extract/     # Section routing, assessment
+├── dedup/       # Exact, fuzzy, semantic dedup
+├── schedule/    # Merge graph, dispatch, apply
+└── store/       # Corpus registry, I/O, export
+app/
+├── cli.py       # CLI entry point
+├── commands/    # Command handlers
+└── workflows.py # Test and audit workflows
+tests/
+└── subsystems/  # Integration and parity tests
+```
+
+## Reporting issues
+
+Report bugs through the project issue tracker. Include:
+
+- INDW version (`indw doctor`)
+- Quality profile used
+- Minimal reproduction corpus (or synthetic example)
+- Expected vs actual output hash
+
+Security disclosures follow [SECURITY.md](https://github.com/indw/indw/blob/main/SECURITY.md).
+
+## License
+
+Contributions are licensed under Apache-2.0. See [LICENSE](https://github.com/indw/indw/blob/main/LICENSE).
+
+<NextSteps links={[
+  { title: "Testing", href: "/docs/data-workflow/developer/testing", description: "Test profiles, markers, and writing subsystem tests." },
+  { title: "Extensions", href: "/docs/data-workflow/developer/extensions", description: "Optional capability extras and plugins." }
+]} />

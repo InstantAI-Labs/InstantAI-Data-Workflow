@@ -1,0 +1,131 @@
+---
+title: "Configuration"
+description: "Configure INDW pipelines with YAML quality profiles, environment variables, and Python dataclasses."
+order: 3
+sectionOrder: 1
+---
+
+# Configuration
+
+INDW pipelines are configured through `QualityPipelineConfig` — a dataclass loaded from YAML quality profiles, environment variables, or Python code. Configuration controls every stage from Stage0 gates through dedup and balance caps.
+
+## Configuration sources
+
+| Source | Precedence | Use case |
+|--------|------------|----------|
+| CLI flags | Highest | `--backend`, `--workers`, `--fresh` |
+| Environment variables | Medium | Cluster deployment, CI |
+| YAML quality profile | Base | Reproducible pipeline definitions |
+| Python dataclass defaults | Lowest | Fallback when no profile loaded |
+
+## YAML quality profiles
+
+Profiles live under `configs/filtering/` in the repository. Load one at runtime:
+
+```python
+import yaml
+from pathlib import Path
+from indw.filter.spec.quality import QualityPipelineConfig
+
+raw = yaml.safe_load(Path("configs/filtering/quality_fast_first.yaml").read_text())
+cfg = QualityPipelineConfig.from_dict(raw)
+```
+
+A minimal profile:
+
+```yaml
+meta:
+  id: my-pipeline
+  purpose: english web crawl, high throughput
+
+cleaning:
+  enabled: true
+  semantic_cleaning: true
+  artifact_discovery: true
+
+thresholds:
+  min_chars: 150
+  max_chars: 100000
+  min_alpha_ratio: 0.45
+  max_boilerplate_score: 0.40
+
+dedup:
+  exact: true
+  fuzzy: true
+  fuzzy_threshold: 0.90
+  semantic: false
+
+balance:
+  enabled: true
+  domain_caps:
+    web: 0.55
+    code: 0.20
+
+language:
+  enabled: true
+  fast_detector_only: true
+
+pii:
+  enabled: true
+  mode: structural_only
+
+toxicity:
+  enabled: true
+  mode: rules_only
+
+licensing:
+  enabled: true
+  reject_proprietary: true
+```
+
+## Environment variables
+
+| Variable | Values | Purpose |
+|----------|--------|---------|
+| `INSTANT_PIPELINE_BACKEND` | `local`, `thread`, `multiprocess`, `dask` | Execution backend |
+| `INSTANT_PIPELINE_EXECUTOR` | Same as above | Legacy alias for backend |
+| `INSTANT_DASK_SCHEDULER` | `tcp://host:8786` | Dask scheduler address |
+| `DASK_SCHEDULER_ADDRESS` | Same as above | Standard Dask env var |
+| `INSTANT_MERGE_HW_PROBE` | `0` or `1` | Hardware tuning probe |
+
+```bash
+export INSTANT_PIPELINE_BACKEND=dask
+export INSTANT_DASK_SCHEDULER=tcp://scheduler:8786
+indw merge ./raw ./out/filtered.jsonl --workers 8
+```
+
+## Top-level config sections
+
+| Section | Controls |
+|---------|----------|
+| `cleaning` | Semantic cleaning, artifact discovery, HTML processing |
+| `thresholds` | Quality gates, score floors, signal-based rejection |
+| `dedup` | Exact, fuzzy, semantic dedup modes and thresholds |
+| `balance` | Domain and language mixture caps |
+| `adaptive_calibration` | Warmup reservoir and percentile anchoring |
+| `synthetic_defense` | Synthetic content and span repetition detection |
+| `semantic_selection` | Section-aware content selection |
+| `curriculum` | Stage-weighted curriculum mixing |
+| `orchestration` | LCI routing and mixture orchestration |
+| `observability` | Reject logs, stage profiles, audit events |
+
+<Callout type="warn" title="Config pinning">
+  Merge runs snapshot the resolved configuration into the work directory. Changing YAML mid-run does not affect an in-progress merge — restart with `--fresh` to pick up changes.
+</Callout>
+
+## PipelineConfigContext
+
+For programmatic access to the active quality spec:
+
+```python
+from indw.config.resolve import PipelineConfigContext
+
+ctx = PipelineConfigContext.resolve(quality_spec="data/filtering/quality_fast_first")
+cfg = ctx.quality
+gate = ctx.with_quality(cfg).build_gate()
+```
+
+<NextSteps links={[
+  { title: "Pipeline Configuration", href: "/docs/data-workflow/configuration/pipeline", description: "Full QualityPipelineConfig schema reference." },
+  { title: "Environments", href: "/docs/data-workflow/configuration/environments", description: "Environment-specific overrides for dev, staging, and production." }
+]} />

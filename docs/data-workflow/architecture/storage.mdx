@@ -1,0 +1,123 @@
+---
+title: "Storage"
+description: "INDW storage layer: corpus registry, atomic I/O, columnar formats, and JSONL export."
+order: 5
+sectionOrder: 2
+---
+
+# Storage
+
+The storage subsystem (`indw.store`) manages corpus metadata, atomic file I/O, checkpoint persistence, and training-ready export formats. Work directories are the operational source of truth for every merge run.
+
+## Corpus registry
+
+`CorpusRegistry` tracks corpus identity, source manifests, and metadata within a work directory:
+
+```python
+from indw.store.corpus.registry import CorpusRegistry
+
+corpus = CorpusRegistry("./work", corpus_id="web-crawl-v2")
+corpus.corpus_id  # "web-crawl-v2"
+```
+
+The registry persists corpus manifests used by `FastDatasetPipeline` for multi-phase ingest-merge workflows.
+
+## Input format
+
+INDW reads JSONL from `raw/<source_name>/data.jsonl`. Each line is a JSON object:
+
+```json
+{
+  "text": "Document body text...",
+  "url": "https://example.com/page",
+  "meta": {"source": "web-crawl", "crawl_date": "2025-06-01"}
+}
+```
+
+Required field: `text`. Additional fields are preserved through the pipeline and written to output.
+
+## Output format
+
+Filtered output is JSONL with pipeline annotations appended:
+
+```json
+{
+  "text": "Cleaned document text...",
+  "url": "https://example.com/page",
+  "quality_score": 0.82,
+  "doc_tier": 0,
+  "doc_content_hash": "a1b2c3...",
+  "domain": "web"
+}
+```
+
+Output is written atomically via `indw.store.io.atomic` — partial writes never corrupt the output file.
+
+## Atomic I/O
+
+```python
+from indw.store.io.atomic import atomic_write_jsonl
+
+with atomic_write_jsonl(output_path) as writer:
+    for doc in survivors:
+        writer.write(doc)
+```
+
+Atomic writes use temp-file-then-rename to guarantee crash safety.
+
+## JSON codec
+
+`indw.store.io.json_codec` uses `orjson` for high-throughput serialization. The codec handles numpy types, datetime objects, and nested structures in document metadata.
+
+## Columnar storage
+
+For analytics and corpus evaluation, INDW supports columnar formats via `indw.store.io.columnar`. Use columnar storage for intermediate artifacts that benefit from column-oriented access patterns.
+
+## Export utilities
+
+| Function | Purpose |
+|----------|---------|
+| `export_token_bins_fast` | Export token-binned training shards |
+| `build_pretrain_dataloader` | Memmap-backed PyTorch dataloader |
+| `build_val_dataloader` | Validation split dataloader |
+
+```python
+from indw.store.export.fast_export import export_token_bins_fast
+
+export_token_bins_fast(
+    "./out/filtered.jsonl",
+    "./out/token_bins",
+    tokenizer_path="./tokenizer",
+)
+```
+
+## Work directory layout
+
+<FileTree>
+  <Folder name="work" description="Merge work directory">
+    <File name="checkpoint.json" description="Per-source line offsets" />
+    <File name="resolved_config.yaml" description="Pinned quality profile" />
+    <File name="merge.lock" description="Concurrency lock" />
+    <Folder name="dedup">
+      <File name="exact_index.bin" description="Exact hash index" />
+      <File name="fuzzy_lsh.pkl" description="MinHash LSH state" />
+    </Folder>
+    <Folder name="audit">
+      <File name="stage_profile.json" description="Per-stage timing" />
+      <File name="reject_log.jsonl" description="Rejection reasons" />
+    </Folder>
+  </Folder>
+</FileTree>
+
+## Manifest
+
+`indw.store.corpus.manifest` generates corpus manifests with document counts, source breakdowns, quality score distributions, and output hash for reproducibility tracking.
+
+<Callout type="tip" title="Work directory retention">
+  Keep work directories for production runs. They contain the resolved config, checkpoints for resume, and audit artifacts needed by `indw audit --kind pipeline`.
+</Callout>
+
+<NextSteps links={[
+  { title: "Outputs Configuration", href: "/docs/data-workflow/configuration/outputs", description: "Configure output paths, formats, and export options." },
+  { title: "Datasets Configuration", href: "/docs/data-workflow/configuration/datasets", description: "Source registry and mixture weight configuration." }
+]} />

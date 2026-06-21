@@ -1,0 +1,178 @@
+---
+title: "Pipeline Configuration"
+description: "Complete QualityPipelineConfig schema reference for INDW quality profiles."
+order: 4
+sectionOrder: 6
+---
+
+# Pipeline Configuration
+
+`QualityPipelineConfig` is the root configuration object for INDW pipelines. Load it from YAML quality profiles or construct it programmatically.
+
+## Loading profiles
+
+```python
+import yaml
+from pathlib import Path
+from indw.filter.spec.quality import QualityPipelineConfig
+
+cfg = QualityPipelineConfig.from_dict(
+    yaml.safe_load(Path("configs/filtering/quality_fast_first.yaml").read_text(encoding="utf-8"))
+)
+```
+
+Repository profiles in `configs/filtering/`:
+
+| Profile | Purpose |
+|---------|---------|
+| `quality_fast_first.yaml` | High throughput, adaptive quality |
+| `quality_smoke_5mb.yaml` | Small corpus smoke testing |
+| `quality_english_150m.yaml` | English 150M document scale |
+
+## Root fields
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `enabled` | bool | `true` | Master quality pipeline switch |
+| `cleaning` | CleaningConfig | defaults | Semantic cleaning settings |
+| `thresholds` | QualityThresholds | defaults | Quality gate thresholds |
+| `dedup` | DedupConfig | defaults | Dedup mode configuration |
+| `balance` | BalanceConfig | defaults | Domain/language mixture caps |
+| `sample_scores` | int | `5000` | Score sampling reservoir size |
+| `synthetic_defense` | SyntheticDefenseConfig | defaults | Synthetic content detection |
+| `semantic_selection` | SemanticSelectionConfig | defaults | Section-aware selection |
+| `curriculum` | CurriculumConfig | defaults | Document type weighting |
+| `adaptive_calibration` | AdaptiveCalibrationConfig | defaults | Adaptive threshold tuning |
+| `observability` | dict | `None` | Reject logs and stage profiles |
+
+## thresholds
+
+```yaml
+thresholds:
+  min_score: 0.0
+  max_toxicity: 0.45
+  max_pii_score: 0.45
+  min_entropy: 2.5
+  max_repetition: 0.65
+  max_html_score: 0.15
+  min_alpha_ratio: 0.45
+  min_chars: 80
+  max_chars: 120000
+  score_sample_chars: 8192
+  max_prompt_injection_score: 0.4
+  max_token_spam_score: 0.55
+  min_structural_quality: 0.25
+  min_coherence_score: 0.2
+  max_reasoning_repetition: 0.7
+  max_truncation_score: 0.55
+  max_boilerplate_score: 0.40
+  max_commercial_score: 0.38
+  max_seo_spam_score: 0.35
+  max_low_information_score: 0.50
+  max_software_piracy_score: 0.18
+  min_informative_density: 0.015
+  high_quality_only: false
+```
+
+## dedup
+
+```yaml
+dedup:
+  exact: true
+  fuzzy: true
+  fuzzy_threshold: 0.90
+  fuzzy_num_perm: 128
+  fuzzy_quality_margin: 0.05
+  semantic: true
+  semantic_hamming_threshold: 4
+  semantic_jaccard_threshold: 0.72
+  semantic_recent_jaccard_threshold: 0.85
+  skip_within_document_chunks: true
+  embedding:
+    model: "sentence-transformers/all-MiniLM-L6-v2"
+    batch_size: 64
+    device: "cpu"
+```
+
+## balance
+
+```yaml
+balance:
+  enabled: true
+  domain_caps:
+    web: 0.55
+    code: 0.20
+    conversation: 0.15
+    wiki: 0.20
+    reasoning: 0.10
+    docs: 0.10
+    qa: 0.12
+  language_caps:
+    en: 0.75
+    other: 1.0
+  soft_cap_overflow: 0.15
+  quality_cap_bypass_score: 0.75
+  quality_high_value_domain_bypass_score: 0.58
+  min_kept_before_cap: 200
+```
+
+## cleaning
+
+See [Cleaning Guide](/docs/data-workflow/guides/cleaning) for the full `CleaningConfig` schema. Key fields:
+
+```yaml
+cleaning:
+  enabled: true
+  semantic_cleaning: true
+  artifact_discovery: true
+  knowledge_extraction: true
+  truncation_repair: true
+  code_preservation: true
+  document_gate: true
+```
+
+## Policy overlays
+
+Optional policy sections overlay defaults at runtime:
+
+```yaml
+language:
+  enabled: true
+  fast_detector_only: true
+  english_only: false
+
+pii:
+  enabled: true
+  mode: structural_only
+
+toxicity:
+  enabled: true
+  mode: rules_only
+
+licensing:
+  enabled: true
+  reject_proprietary: true
+```
+
+Access resolved policies:
+
+```python
+cfg.language_policy()
+cfg.pii_policy()
+cfg.toxicity_policy()
+cfg.license_policy()
+```
+
+## Serialization
+
+```python
+cfg_dict = cfg.to_dict()
+restored = QualityPipelineConfig.from_dict(cfg_dict)
+```
+
+Merge runs snapshot the resolved config to `work/resolved_config.yaml` for reproducibility.
+
+<NextSteps links={[
+  { title: "Configuration Getting Started", href: "/docs/data-workflow/getting-started/configuration", description: "Environment variables and precedence." },
+  { title: "API Reference", href: "/docs/data-workflow/reference/api", description: "Python API for config and merge." }
+]} />

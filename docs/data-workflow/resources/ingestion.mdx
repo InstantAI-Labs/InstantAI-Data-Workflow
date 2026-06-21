@@ -1,0 +1,131 @@
+---
+title: "Ingestion"
+description: "Ingest raw documents from Hugging Face, S3, local disk, and web crawls into INDW JSONL format."
+order: 1
+sectionOrder: 4
+---
+
+# Ingestion
+
+INDW ingests raw documents from multiple sources and normalizes them to JSONL under `raw/<source>/data.jsonl`. The ingest subsystem handles download, format conversion, and incremental resume.
+
+## Source layout
+
+```
+raw/
+├── huggingface-wiki/
+│   └── data.jsonl
+├── web-crawl/
+│   └── data.jsonl
+└── local-docs/
+    └── data.jsonl
+```
+
+Each source directory name becomes the source identifier used in mixture weights, balance caps, and checkpoint tracking.
+
+## Hugging Face datasets
+
+`DatasetDownloader` streams Hugging Face datasets directly to JSONL:
+
+```python
+from pathlib import Path
+from indw.ingest.download import DatasetDownloader
+
+downloader = DatasetDownloader(Path("./raw"), write_buffer_bytes=8 * 1024 * 1024)
+downloader.fetch_all({
+    "meta": {"id": "my-corpus"},
+    "sources": [
+        {
+            "name": "wiki",
+            "type": "huggingface",
+            "dataset": "wikimedia/wikipedia",
+            "config": "20231101.en",
+            "split": "train",
+            "text_field": "text",
+        }
+    ],
+})
+```
+
+Install with fast HF transfer:
+
+```python
+from indw.ingest.hf_env import configure_hf_fast
+configure_hf_fast()  # enables hf_transfer when available
+```
+
+## FastDatasetPipeline
+
+For end-to-end ingest + merge workflows:
+
+```python
+from indw.ingest.run import FastDatasetPipeline
+
+pipeline = FastDatasetPipeline(
+    work_dir="./work",
+    quality_config_path="configs/filtering/quality_fast_first.yaml",
+)
+pipeline.run(sources_config, merge_workers=4, fresh_merge=True)
+```
+
+`FastDatasetPipeline` runs three phases:
+1. **Download** — stream sources to `work/raw/`
+2. **Merge** — quality merge to `work/filtered.jsonl`
+3. **Export** — optional token bin export
+
+## Incremental ingestion
+
+Resume partial downloads with incremental sources:
+
+```python
+pipeline.run(
+    sources_config,
+    incremental_sources=["wiki", "web-crawl"],
+    skip_download=False,
+    resume_merge=True,
+)
+```
+
+`run_incremental_stage` tracks per-source download progress and skips completed shards.
+
+## Local disk ingestion
+
+Place pre-formatted JSONL files directly:
+
+```bash
+mkdir -p raw/my-source
+cp /data/corpus.jsonl raw/my-source/data.jsonl
+indw merge ./raw ./out/filtered.jsonl --work-dir ./work
+```
+
+Convert other formats with a preprocessing script:
+
+```python
+import json
+
+with open("input.txt") as fin, open("raw/my-source/data.jsonl", "w") as fout:
+    for line in fin:
+        fout.write(json.dumps({"text": line.strip()}) + "\n")
+```
+
+## Document schema
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `text` | Yes | Document body |
+| `url` | No | Source URL for provenance and licensing |
+| `meta` | No | Arbitrary metadata dict |
+| `id` | No | Stable document identifier |
+
+<Callout type="tip" title="Write buffer">
+  Increase `write_buffer_bytes` for high-throughput downloads. Default is 8 MB; 64 MB reduces syscall overhead on fast networks.
+</Callout>
+
+## Content hashing
+
+`indw.ingest.hash` computes content hashes at ingest time for dedup pre-checks. Hashes are SHA-256 of normalized text content.
+
+<NextSteps links={[
+  { title: "Datasets Configuration", href: "/docs/data-workflow/configuration/datasets", description: "Source registry and mixture weight YAML." },
+  { title: "Filtering Guide", href: "/docs/data-workflow/guides/filtering", description: "What happens after documents enter the pipeline." }
+]} />

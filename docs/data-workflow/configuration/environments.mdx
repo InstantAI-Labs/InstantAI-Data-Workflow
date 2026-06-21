@@ -1,0 +1,122 @@
+---
+title: "Environments"
+description: "Configure INDW for development, staging, and production environments with environment variables and backend selection."
+order: 2
+sectionOrder: 6
+---
+
+# Environments
+
+INDW behavior varies by deployment environment through environment variables, backend selection, and quality profile choice. This page covers configuration patterns for each environment.
+
+## Environment variable reference
+
+| Variable | Values | Default | Purpose |
+|----------|--------|---------|---------|
+| `INSTANT_PIPELINE_BACKEND` | `local`, `thread`, `multiprocess`, `dask` | `multiprocess` | Execution backend |
+| `INSTANT_PIPELINE_EXECUTOR` | Same as above | — | Legacy alias |
+| `INSTANT_DASK_SCHEDULER` | `tcp://host:port` | — | Dask scheduler address |
+| `DASK_SCHEDULER_ADDRESS` | Same as above | — | Standard Dask env var |
+| `INSTANT_MERGE_HW_PROBE` | `0`, `1` | `0` | Auto-tune workers from hardware |
+
+## Development
+
+Minimal resources, fast iteration:
+
+```bash
+export INSTANT_PIPELINE_BACKEND=local
+export INSTANT_MERGE_HW_PROBE=0
+
+indw merge ./examples/raw ./examples/out/filtered.jsonl \
+  --work-dir ./examples/work --fresh
+```
+
+Use `quality_smoke_5mb.yaml` or similar small-corpus profiles. Enable observability for debugging:
+
+```yaml
+observability:
+  enabled: true
+```
+
+## Staging
+
+Match production configuration on a sample corpus:
+
+```bash
+export INSTANT_PIPELINE_BACKEND=multiprocess
+export INSTANT_MERGE_HW_PROBE=1
+
+indw merge ./raw-sample ./out/sample.jsonl \
+  --work-dir ./work-staging --workers 4 --fresh
+
+indw validate
+indw audit --kind pipeline --work-dir ./work-staging
+```
+
+Use the same quality profile as production. Verify hash stability before scaling.
+
+## Production
+
+Cluster execution with full observability:
+
+```bash
+export INSTANT_PIPELINE_BACKEND=dask
+export INSTANT_DASK_SCHEDULER=tcp://scheduler.internal:8786
+export INSTANT_MERGE_HW_PROBE=1
+
+indw merge /data/raw /data/out/filtered.jsonl \
+  --work-dir /data/work --workers 32 --chunk-size 1000
+```
+
+Production checklist:
+
+- [ ] `indw doctor` passes with all required extras
+- [ ] `indw validate` passes on acceptance corpus
+- [ ] `indw audit --kind production` passes
+- [ ] Work directory on durable storage (not ephemeral container FS)
+- [ ] Quality profile pinned in version control
+- [ ] Merge run lock prevents concurrent writes
+
+## CI environment
+
+```bash
+export INSTANT_PIPELINE_BACKEND=multiprocess
+export INSTANT_MERGE_HW_PROBE=0
+
+indw doctor
+indw test --profile critical
+indw test --profile parity
+```
+
+CI should not require Dask or GPU extras unless testing distributed-specific code paths.
+
+## Configuration precedence
+
+```
+CLI flags  >  Environment variables  >  YAML quality profile  >  Dataclass defaults
+```
+
+Example: `--backend local` overrides `INSTANT_PIPELINE_BACKEND=dask` even if the YAML profile specifies multiprocess.
+
+<Callout type="warn" title="Container ephemeral storage">
+  Do not use container ephemeral filesystems for work directories in production. Checkpoint loss on container restart forces a full re-merge from scratch.
+</Callout>
+
+## Observability by environment
+
+| Environment | Observability | Reject log | Stage profile |
+|-------------|---------------|------------|---------------|
+| Development | Enabled | Yes | Yes |
+| Staging | Enabled | Yes | Yes |
+| Production | Configurable | Yes | Yes |
+| CI | Disabled | No | No |
+
+```yaml
+observability:
+  enabled: true
+```
+
+<NextSteps links={[
+  { title: "Distributed Guide", href: "/docs/data-workflow/guides/distributed", description: "Dask cluster setup for production." },
+  { title: "Configuration", href: "/docs/data-workflow/getting-started/configuration", description: "YAML profile loading and precedence." }
+]} />

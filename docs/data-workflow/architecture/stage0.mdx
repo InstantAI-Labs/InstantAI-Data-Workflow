@@ -1,0 +1,140 @@
+---
+title: "Stage0 Filter"
+description: "The fast-rejection layer that eliminates low-quality documents before expensive downstream processing."
+order: 4
+sectionOrder: 2
+---
+
+# Stage0 Filter
+
+Stage0 is the first filtering layer in every INDW pipeline. It runs lightweight, high-throughput checks to reject obviously bad documents before they consume CPU time in semantic cleaning or extraction stages.
+
+<StatsRow>
+  <Stat value="< 2s" label="Per 1,000 docs" />
+  <Stat value="60–80%" label="Typical rejection rate" />
+  <Stat value="5" label="Stage marks" />
+  <Stat value="0" label="ML models required" />
+</StatsRow>
+
+## How it works
+
+Stage0 applies a sequence of deterministic gates in `process_stage0_batch`. A document fails as soon as any gate rejects it — no further checks run. Gates are ordered cheapest-first to maximize throughput.
+
+<Flow
+  nodes={[
+    { id: "1", data: { label: "Language Gate", icon: "🌐" } },
+    { id: "2", data: { label: "Exact Doc Dedup", icon: "🔑" } },
+    { id: "3", data: { label: "Structural Filter", icon: "📏" } },
+    { id: "4", data: { label: "Metadata Enrich", icon: "🏷️", valid: true } },
+    { id: "5", data: { label: "PCI Admission", icon: "🚦", valid: true } },
+    { id: "6", data: { label: "Reject", icon: "🗑️", valid: false } }
+  ]}
+  edges={[
+    { id: "e1-2", source: "1", target: "2", label: "pass", color: "#22c55e" },
+    { id: "e1-6", source: "1", target: "6", label: "language", color: "#ef4444" },
+    { id: "e2-3", source: "2", target: "3" },
+    { id: "e2-6", source: "2", target: "6", label: "dup", color: "#ef4444" },
+    { id: "e3-4", source: "3", target: "4" },
+    { id: "e3-6", source: "3", target: "6", label: "structural", color: "#ef4444" },
+    { id: "e4-5", source: "4", target: "5", animated: true }
+  ]}
+/>
+
+## Built-in gates
+
+| Gate | What it checks | Configurable |
+|------|---------------|--------------|
+| Language | Detected language vs allowlist | Yes — `language` section |
+| Exact doc dedup | Content hash against seen set | Yes — `dedup.exact` |
+| Length | Min/max character count | Yes — `thresholds.min_chars`, `max_chars` |
+| Structural | Alpha ratio, entropy, HTML score | Yes — `thresholds` section |
+| PII | Email, phone, SSN patterns | Yes — `pii` section |
+| Toxicity | Keyword blocklist + heuristics | Yes — `toxicity` section |
+| Licensing | Source domain policy | Yes — `licensing` section |
+
+## Stage0 content filters
+
+`run_stage0_content_filters` applies structural checks using `document_gate_raw` features:
+
+```python
+from indw.filter.stage0.engine import run_stage0_content_filters, worker_gate_policy
+
+pol = worker_gate_policy()
+reject = run_stage0_content_filters(
+    text,
+    meaningful_chars=meaningful_chars,
+    raw=raw_features,
+    pol=pol,
+    normalized=True,
+)
+```
+
+Rejection reasons are string codes (e.g. `too_short`, `low_alpha_ratio`, `high_html_score`) logged to the reject log when observability is enabled.
+
+## PCI admission
+
+After Stage0 gates pass, `evaluate_admission` assigns a PCI tier based on meaningful character count. Tier assignment determines whether the document enters heavy stage pools or is terminated.
+
+```python
+from indw.filter.stage0.admission import evaluate_admission
+
+decision = evaluate_admission(meaningful_chars=meaningful_chars)
+# decision.tier → TIER0 or TIER1
+```
+
+## Configuration
+
+```yaml
+thresholds:
+  min_chars: 150
+  max_chars: 100000
+  min_alpha_ratio: 0.45
+  max_html_score: 0.15
+  max_repetition: 0.65
+
+language:
+  enabled: true
+  fast_detector_only: true
+
+pii:
+  enabled: true
+  mode: structural_only
+
+toxicity:
+  enabled: true
+  mode: rules_only
+
+licensing:
+  enabled: true
+  reject_proprietary: true
+  reject_paywalled: true
+```
+
+<Callout type="tip" title="Ordering matters">
+  Stage0 gates run in fixed engine order: language → dedup → structural → admission. Put the cheapest configurable checks (length, language) in your thresholds to maximize throughput.
+</Callout>
+
+## Audit Stage0 throughput
+
+```bash
+indw audit --kind stage0 --workers 4
+```
+
+This runs `stage0_production_verify.py` to measure per-1k-document latency and rejection distribution.
+
+## Writing a custom gate
+
+Extend the structural filter by adding checks to a custom quality profile or implementing gate logic in the cleaning pipeline's `document_gate` stage:
+
+```python
+from indw.clean.gate.evaluate import document_gate_raw
+
+features = document_gate_raw(text)
+if features.get("custom_signal", 0) > 0.8:
+    return "custom_reject_reason"
+```
+
+<NextSteps links={[
+  { title: "Filtering Guide", href: "/docs/data-workflow/guides/filtering", description: "End-to-end guide to building custom filter pipelines." },
+  { title: "Architecture Overview", href: "/docs/data-workflow/architecture/overview", description: "Where Stage0 fits in the full execution graph." }
+]} />

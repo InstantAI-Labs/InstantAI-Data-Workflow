@@ -1,0 +1,125 @@
+---
+title: "Execution Graph"
+description: "How INDW resolves, dispatches, and executes the canonical merge stage graph."
+order: 2
+sectionOrder: 2
+---
+
+# Execution Graph
+
+The execution graph is INDW's single canonical representation of pipeline stages. Every merge run resolves the same graph regardless of backend — workers execute stage pools in parallel, and the apply coordinator merges results in document sequence order.
+
+<Prerequisites links={[
+  { title: "Architecture Overview", href: "/docs/data-workflow/architecture/overview" }
+]} />
+
+## Graph structure
+
+Documents enter the graph as rows from interleaved source streams. Each document carries a `MergeDocumentContext` that accumulates stage marks, rejection reasons, quality scores, and dedup hashes through the pipeline.
+
+<Flow
+  nodes={[
+    { id: "1", data: { label: "Source Interleave" } },
+    { id: "2", data: { label: "Stage0 Pool" } },
+    { id: "3", data: { label: "Clean Pool" } },
+    { id: "4", data: { label: "Extract Pool" } },
+    { id: "5", data: { label: "Dedup Pool" } },
+    { id: "6", data: { label: "Quality Gate" } },
+    { id: "7", data: { label: "Apply" } }
+  ]}
+  edges={[
+    { id: "e1-2", source: "1", target: "2" },
+    { id: "e2-3", source: "2", target: "3", animated: true },
+    { id: "e3-4", source: "3", target: "4" },
+    { id: "e4-5", source: "4", target: "5" },
+    { id: "e5-6", source: "5", target: "6" },
+    { id: "e6-7", source: "6", target: "7", animated: true }
+  ]}
+/>
+
+## Stage marks
+
+Each document context tracks which stages have processed it via stage marks:
+
+| Mark | Stage | Purpose |
+|------|-------|---------|
+| `STAGE_FAST_FILTER` | Language gate | Early language detection and rejection |
+| `STAGE_DOC_DEDUP` | Exact doc dedup | Content hash against seen set |
+| `STAGE_STRUCTURAL_FILTER` | Stage0 content filters | Length, entropy, structural checks |
+| `STAGE_METADATA` | Ingest enrichment | URL, domain, provenance metadata |
+| `STAGE_ADMISSION` | PCI admission | Tier assignment (TIER0, TIER1) |
+
+Stage0 processing in `process_stage0_batch` runs these marks in order. A rejection at any mark terminates the document with a tier assignment.
+
+## Dispatch model
+
+The scheduler dispatches documents in chunks (default 500 per batch) to worker pools:
+
+```python
+# Conceptual dispatch flow
+batch = read_chunk(sources, chunk_size=500)
+stage0_result = process_stage0_batch(batch)
+clean_result = process_clean_pool(stage0_result.survivors)
+# ... extract, dedup, quality gate
+apply_coordinator.write_ordered(results)
+```
+
+Worker count and chunk size are resolved from CLI flags, environment, and hardware probes:
+
+```bash
+indw merge ./raw ./out/filtered.jsonl --workers 8 --chunk-size 500
+```
+
+## MergeDocumentContext
+
+The document context is the carrier object through the graph:
+
+```python
+from indw.schedule.state.context import MergeDocumentContext
+
+ctx = MergeDocumentContext.from_survivor_payload(item)
+ctx.mark(STAGE_FAST_FILTER)
+ctx.reject("language_not_allowed")  # terminates document
+ctx.survivor_payload(work_dir=work_dir)  # serializable output
+```
+
+Rejected documents carry `_reject_tier` and rejection reason. Survivors carry `stage0_cleared`, quality scores, and dedup hashes for downstream pools.
+
+## PipelineRunner
+
+`PipelineRunner` (`indw.schedule.stages.runner`) orchestrates stage pool execution. It resolves the active backend, allocates worker pools, and coordinates batch handoff between stage pools without duplicating stage logic per backend.
+
+<Mermaid chart={`
+classDiagram
+  class MergeDocumentContext {
+    +text str
+    +doc_tier int
+    +reject(reason)
+    +mark(stage)
+    +survivor_payload()
+  }
+  class PipelineRunner {
+    +run(batch)
+    +resolve_backend()
+  }
+  class Stage0Pool {
+    +process_stage0_batch()
+  }
+  PipelineRunner --> Stage0Pool
+  Stage0Pool --> MergeDocumentContext
+`} />
+
+## Parity guarantees
+
+The execution graph is designed for backend parity. Integration tests verify:
+
+- Local vs multiprocess output hash match
+- Workers=1 vs workers=N hash match
+- Tier admission consistency across backends
+
+Run `indw validate` to execute the parity suite.
+
+<NextSteps links={[
+  { title: "Scheduler", href: "/docs/data-workflow/architecture/scheduler", description: "Apply coordinator, checkpoints, and mixture orchestration." },
+  { title: "Stage0 Filter", href: "/docs/data-workflow/architecture/stage0", description: "Fast-rejection layer details and gate ordering." }
+]} />

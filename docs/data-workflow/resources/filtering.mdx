@@ -1,0 +1,133 @@
+---
+title: "Filtering"
+description: "Configure Stage0 gates, quality thresholds, PII detection, toxicity scoring, and licensing policies."
+order: 2
+sectionOrder: 4
+---
+
+# Filtering
+
+INDW filtering spans Stage0 fast rejection and downstream quality gates. This guide covers configuring rejection thresholds, policy modes, and adaptive calibration for production corpora.
+
+<Prerequisites links={[
+  { title: "Stage0 Filter", href: "/docs/data-workflow/architecture/stage0" }
+]} />
+
+## Filtering layers
+
+| Layer | When | Cost | Typical rejection |
+|-------|------|------|-------------------|
+| Stage0 structural | Before heavy stages | Very low | 60–80% |
+| Language gate | Stage0, first mark | Low | 10–20% of remainder |
+| Quality gate | After cleaning | Medium | 5–15% |
+| Balance caps | At apply | Low | Domain-dependent |
+
+## Quality thresholds
+
+`QualityThresholds` controls signal-based rejection after cleaning:
+
+```yaml
+thresholds:
+  min_score: 0.0
+  min_chars: 150
+  max_chars: 120000
+  min_alpha_ratio: 0.45
+  max_repetition: 0.65
+  max_html_score: 0.15
+  max_boilerplate_score: 0.40
+  max_commercial_score: 0.38
+  max_seo_spam_score: 0.35
+  max_low_information_score: 0.50
+  min_informative_density: 0.015
+  max_truncation_score: 0.55
+  high_quality_only: false
+```
+
+Set `high_quality_only: true` for premium corpora that require top-percentile documents only.
+
+## PII filtering
+
+```yaml
+pii:
+  enabled: true
+  mode: structural_only   # or ner for NER-based detection
+  ner_enabled: false
+```
+
+| Mode | Detection | Speed |
+|------|-----------|-------|
+| `structural_only` | Regex patterns (email, phone, SSN) | Fast |
+| `ner` | Named entity recognition | Slower, more accurate |
+
+Reject documents exceeding `thresholds.max_pii_score`.
+
+## Toxicity filtering
+
+```yaml
+toxicity:
+  enabled: true
+  mode: rules_only        # or classifier
+  classifier_enabled: false
+```
+
+`rules_only` uses keyword blocklists and heuristics — no ML model required. Enable `classifier_enabled` for model-based toxicity scoring when the `embedding` extra is installed.
+
+## Licensing policy
+
+```yaml
+licensing:
+  enabled: true
+  reject_proprietary: true
+  reject_paywalled: true
+  flag_unknown: true
+  include_provenance_in_jsonl: false
+```
+
+`LicensePolicyConfig` classifies documents by source domain and URL patterns. Proprietary and paywalled content is rejected when configured.
+
+## Adaptive calibration
+
+Adaptive calibration adjusts rejection thresholds based on corpus distribution during the warmup phase:
+
+```yaml
+adaptive_calibration:
+  enabled: true
+  warmup_samples: 200
+  reservoir_size: 10000
+  downrank_anchor_percentile: 30.0
+```
+
+During warmup, INDW samples quality scores into a reservoir. After warmup, documents below the anchor percentile are downranked. This prevents over-rejection on diverse corpora and under-rejection on homogeneous ones.
+
+## Synthetic defense
+
+```yaml
+synthetic_defense:
+  enabled: true
+  max_synthetic_score: 0.72
+  min_semantic_diversity: 0.18
+  max_repeated_span_score: 0.75
+```
+
+Detects machine-generated content and repeated span patterns common in SEO spam and synthetic data contamination.
+
+## QualityGate API
+
+```python
+from indw.filter.gate.quality import QualityGate
+from indw.config.resolve import PipelineConfigContext
+
+ctx = PipelineConfigContext.resolve()
+gate = QualityGate(ctx=ctx)
+decision = gate.evaluate(doc)
+# decision.accepted, decision.score, decision.reasons
+```
+
+<Callout type="warn" title="Threshold tuning">
+  Start with `quality_fast_first.yaml` for initial runs. Tighten thresholds incrementally and run `indw validate` after each change to verify hash stability on your acceptance corpus.
+</Callout>
+
+<NextSteps links={[
+  { title: "Semantic Guide", href: "/docs/data-workflow/guides/semantic", description: "Semantic selection and section-aware filtering." },
+  { title: "Pipeline Configuration", href: "/docs/data-workflow/configuration/pipeline", description: "Full threshold and policy schema." }
+]} />

@@ -1,0 +1,108 @@
+---
+title: "Quickstart"
+description: "Run your first INDW pipeline in under five minutes."
+order: 2
+sectionOrder: 1
+---
+
+# Quickstart
+
+Run a complete merge pipeline on a small raw corpus and verify deterministic output in under five minutes.
+
+<Prerequisites links={[
+  { title: "Installation", href: "/docs/data-workflow/getting-started/installation" }
+]} />
+
+## 1. Prepare raw input
+
+INDW expects JSONL files under `raw/<source_name>/data.jsonl`. Each line is a JSON object with at least a `text` field.
+
+<FileTree>
+  <Folder name="my-pipeline" description="Project root">
+    <Folder name="raw">
+      <Folder name="web-crawl">
+        <File name="data.jsonl" description="One JSON object per line" active />
+      </Folder>
+    </Folder>
+    <File name="pipeline.yaml" description="Quality profile (optional)" />
+  </Folder>
+</FileTree>
+
+Example document:
+
+```json
+{"text": "The transformer architecture uses self-attention to model sequence dependencies...", "url": "https://example.com/doc1"}
+```
+
+## 2. Run merge
+
+```bash
+indw merge ./raw ./out/filtered.jsonl --work-dir ./work --workers 2 --fresh
+```
+
+| Flag | Purpose |
+|------|---------|
+| `raw_dir` | Directory containing `*/data.jsonl` source files |
+| `out_path` | Output JSONL path |
+| `--work-dir` | Checkpoints, resolved config, audit artifacts |
+| `--workers` | Parallel worker count |
+| `--fresh` | Clear prior checkpoints and start clean |
+
+## 3. Inspect output
+
+```bash
+wc -l ./out/filtered.jsonl
+head -n 1 ./out/filtered.jsonl | python -m json.tool
+```
+
+Surviving documents retain source metadata and gain pipeline annotations (`quality_score`, `doc_tier`, dedup hashes).
+
+## 4. Validate determinism
+
+```bash
+indw validate
+```
+
+The parity suite confirms that local and multiprocess backends produce identical output hashes for the same configuration.
+
+## Python API
+
+```python
+from pathlib import Path
+from indw.filter.spec.quality import QualityPipelineConfig
+from indw.schedule import merge_with_quality
+
+merge_with_quality(
+    Path("./raw"),
+    Path("./out/filtered.jsonl"),
+    quality_config=QualityPipelineConfig(),
+    work_dir=Path("./work"),
+    workers=2,
+    fresh=True,
+)
+```
+
+## Custom quality profile
+
+Load a YAML profile instead of defaults:
+
+```python
+import yaml
+from pathlib import Path
+from indw.filter.spec.quality import QualityPipelineConfig
+from indw.schedule import merge_with_quality
+
+cfg = QualityPipelineConfig.from_dict(
+    yaml.safe_load(Path("configs/filtering/quality_fast_first.yaml").read_text())
+)
+merge_with_quality("./raw", "./out/filtered.jsonl", quality_config=cfg, work_dir="./work", fresh=True)
+```
+
+<Callout type="tip" title="Resume interrupted runs">
+  Omit `--fresh` to resume from the last checkpoint. INDW tracks per-source line offsets in the work directory.
+</Callout>
+
+<NextSteps links={[
+  { title: "First Pipeline", href: "/docs/data-workflow/getting-started/first-pipeline", description: "Build a multi-source pipeline with mixture weights and balance caps." },
+  { title: "CLI Commands", href: "/docs/data-workflow/cli/commands", description: "Full reference for merge, validate, audit, and benchmark." }
+]} />

@@ -1,0 +1,109 @@
+---
+title: "Architecture Overview"
+description: "How INDW's canonical execution graph processes documents from ingest through ordered apply."
+order: 1
+sectionOrder: 2
+---
+
+# Architecture Overview
+
+INDW runs a single canonical execution graph. Documents flow through ingest and Stage0, pass PCI admission tiers, enter parallel heavy stage pools, and are written by an ordered apply coordinator. Heavy stage logic is backend-agnostic — only the transport layer changes between local, thread, multiprocess, and Dask execution.
+
+<StatsRow>
+  <Stat value="1" label="Canonical graph" />
+  <Stat value="4" label="Execution backends" />
+  <Stat value="2" label="Admission tiers" />
+  <Stat value="0" label="Logic changes per backend" />
+</StatsRow>
+
+## High-level flow
+
+```
+Ingest → Stage0 → Admission → Heavy pools → Apply → Output
+```
+
+<Flow
+  nodes={[
+    { id: "1", data: { label: "Ingest Raw Docs", icon: "📥" } },
+    { id: "2", data: { label: "Stage0 Filter", icon: "🔍" } },
+    { id: "3", data: { label: "PCI Admission", icon: "🚦" } },
+    { id: "4", data: { label: "Clean Pool", icon: "✨", valid: true } },
+    { id: "5", data: { label: "Extract Pool", icon: "🧠", valid: true } },
+    { id: "6", data: { label: "Dedup Pool", icon: "👯" } },
+    { id: "7", data: { label: "Apply Coordinator", icon: "⚙️" } },
+    { id: "8", data: { label: "Store JSONL", icon: "💾" } },
+    { id: "9", data: { label: "Reject", icon: "🗑️", valid: false } }
+  ]}
+  edges={[
+    { id: "e1-2", source: "1", target: "2" },
+    { id: "e2-3", source: "2", target: "3" },
+    { id: "e2-9", source: "2", target: "9", label: "Stage0 reject", color: "#ef4444" },
+    { id: "e3-4", source: "3", target: "4", label: "Tier 0+", color: "#22c55e", animated: true },
+    { id: "e4-5", source: "4", target: "5" },
+    { id: "e5-6", source: "5", target: "6" },
+    { id: "e6-7", source: "6", target: "7" },
+    { id: "e7-8", source: "7", target: "8", animated: true }
+  ]}
+/>
+
+## Subsystems
+
+| Subsystem | Package | Responsibility |
+|-----------|---------|----------------|
+| Ingest | `indw.ingest` | Download, HF datasets, format normalization |
+| Filter | `indw.filter` | Stage0 gates, quality scoring, PII, toxicity, licensing |
+| Clean | `indw.clean` | Semantic cleaning, artifact discovery, structure recovery |
+| Extract | `indw.extract` | Section routing, entity extraction, assessment |
+| Dedup | `indw.dedup` | Exact hash, MinHash fuzzy, embedding semantic |
+| Schedule | `indw.schedule` | Merge graph, admission, dispatch, apply coordinator |
+| Store | `indw.store` | Corpus registry, atomic I/O, JSONL export |
+
+## Determinism contract
+
+The apply coordinator writes survivors in strict document sequence. The canonical output hash (`sorted_output_hash`) is stable across worker counts and execution backends when the quality configuration and input corpus are unchanged.
+
+<Mermaid chart={`
+sequenceDiagram
+  participant CLI
+  participant Scheduler
+  participant StageGraph
+  participant Executor
+  participant Apply
+  CLI->>Scheduler: indw merge
+  Scheduler->>StageGraph: resolve stages
+  StageGraph->>Executor: dispatch batches
+  Executor-->>StageGraph: survivor payloads
+  StageGraph->>Apply: ordered sequence apply
+  Apply-->>Scheduler: output hash
+  Scheduler-->>CLI: summary report
+`} />
+
+## Backend abstraction
+
+Execution backends implement a common contract (`indw.schedule.backends`). The pipeline runner dispatches document batches to worker pools without knowing whether workers are threads, processes, or Dask tasks.
+
+| Backend | Use case |
+|---------|----------|
+| `local` | Debugging, single-document tracing |
+| `thread` | I/O-bound workloads |
+| `multiprocess` | CPU-bound cleaning and extraction (default) |
+| `dask` | Cluster-scale corpora (100GB+) |
+
+<Callout type="tip" title="Backend selection">
+  Default backend is `multiprocess`. Set `INSTANT_PIPELINE_BACKEND=dask` for cluster execution without changing pipeline code.
+</Callout>
+
+## Work directory artifacts
+
+Every merge run populates the work directory with operational artifacts:
+
+- Resolved configuration snapshot
+- Per-source line-offset checkpoints
+- Reject logs and stage profiles (when observability enabled)
+- Dedup index state for resume
+- JSON audit reports
+
+<NextSteps links={[
+  { title: "Execution Graph", href: "/docs/data-workflow/architecture/execution-graph", description: "Stage pools, dispatch, and merge document context." },
+  { title: "Scheduler", href: "/docs/data-workflow/architecture/scheduler", description: "Admission tiers, apply coordinator, and mixture orchestration." }
+]} />

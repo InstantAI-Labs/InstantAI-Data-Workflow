@@ -1,0 +1,139 @@
+---
+title: "CLI Reference"
+description: "Complete CLI flag reference, exit codes, and environment variable precedence for INDW."
+order: 2
+sectionOrder: 7
+---
+
+# CLI Reference
+
+Complete reference for the `indw` command-line interface.
+
+## Global
+
+```
+indw <command> [options]
+```
+
+| Property | Value |
+|----------|-------|
+| Entry point | `app.cli:main` |
+| Python requirement | ≥ 3.10 |
+| Default backend | `multiprocess` |
+
+## merge
+
+```
+indw merge <raw_dir> <out_path> [options]
+```
+
+| Flag | Type | Default | Env override | Description |
+|------|------|---------|--------------|-------------|
+| `raw_dir` | positional | — | — | Raw corpus directory |
+| `out_path` | positional | — | — | Output JSONL path |
+| `--work-dir` | Path | `out_path.parent` | — | Work directory |
+| `--workers` | int | `1` | — | Worker count |
+| `--chunk-size` | int | `500` | — | Batch size |
+| `--fresh` | flag | off | — | Clear checkpoints |
+| `--backend` | choice | env | `INSTANT_PIPELINE_BACKEND` | Execution backend |
+
+Backend choices: `local`, `thread`, `multiprocess`, `dask`.
+
+Resume is implicit when `--fresh` is not set.
+
+## validate
+
+```
+indw validate [pytest_args...]
+```
+
+Runs parity profile tests. Accepts additional pytest arguments.
+
+Exit code 0 = all parity tests pass.
+
+## test
+
+```
+indw test [--profile PROFILE] [pytest_args...]
+```
+
+| Flag | Choices | Default |
+|------|---------|---------|
+| `--profile` | `unit`, `critical`, `parity`, `integration`, `smoke` | `unit` |
+
+## audit
+
+```
+indw audit [--kind KIND] [--work-dir PATH] [--workers N]
+```
+
+| Flag | Choices | Default | Description |
+|------|---------|---------|-------------|
+| `--kind` | `pipeline`, `dask`, `production`, `library`, `stage0` | `pipeline` | Audit type |
+| `--work-dir` | Path | — | Work dir (pipeline kind only) |
+| `--workers` | int | `4` | Workers (stage0 kind only) |
+
+## benchmark
+
+```
+indw benchmark
+```
+
+Runs `production_scale_audit.py` with workers 1 and 2.
+
+## doctor
+
+```
+indw doctor
+```
+
+No flags. Prints version, platform, backend, and dependency status.
+
+## Environment variables
+
+| Variable | Affects | Default |
+|----------|---------|---------|
+| `INSTANT_PIPELINE_BACKEND` | `merge --backend` | `multiprocess` |
+| `INSTANT_PIPELINE_EXECUTOR` | Backend (legacy) | — |
+| `INSTANT_DASK_SCHEDULER` | Dask address | — |
+| `DASK_SCHEDULER_ADDRESS` | Dask address | — |
+| `INSTANT_MERGE_HW_PROBE` | Worker auto-tuning | `0` |
+
+### Precedence
+
+1. CLI flags (`--backend`, `--workers`, `--fresh`)
+2. Environment variables
+3. YAML quality profile
+4. Dataclass defaults
+
+## Exit codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Success |
+| `1` | Command failure (test failure, missing script, merge error) |
+| `2` | Argument parsing error |
+
+## Pytest markers
+
+Used by `indw test` profiles:
+
+| Marker | Description |
+|--------|-------------|
+| `integration` | Cross-subsystem tests |
+| `slow` | Long-running tests |
+| `smoke` | End-to-end smoke |
+| `critical` | Production-critical coverage |
+| `property` | Deterministic invariants |
+| `benchmark` | Throughput validation |
+| `certification` | Production certification |
+
+<Related links={[
+  { title: "CLI Commands", href: "/docs/data-workflow/cli/commands", description: "Command overview with examples." },
+  { title: "Workflows", href: "/docs/data-workflow/cli/workflows", description: "Operational workflow patterns." }
+]} />
+
+<NextSteps links={[
+  { title: "API Reference", href: "/docs/data-workflow/reference/api", description: "Python API for programmatic access." },
+  { title: "Environments", href: "/docs/data-workflow/configuration/environments", description: "Environment-specific configuration." }
+]} />

@@ -1,0 +1,169 @@
+---
+title: "First Pipeline"
+description: "Build a multi-source INDW pipeline with mixture weights, balance caps, and quality profiles."
+order: 4
+sectionOrder: 1
+---
+
+# First Pipeline
+
+Build a production-style pipeline that ingests multiple sources, applies a quality profile, and produces balanced training output.
+
+<Prerequisites links={[
+  { title: "Quickstart", href: "/docs/data-workflow/getting-started/quickstart" },
+  { title: "Configuration", href: "/docs/data-workflow/getting-started/configuration" }
+]} />
+
+## Project layout
+
+<FileTree>
+  <Folder name="corpus-pipeline" description="Project root">
+    <Folder name="raw" description="Input JSONL per source">
+      <Folder name="wiki">
+        <File name="data.jsonl" />
+      </Folder>
+      <Folder name="web">
+        <File name="data.jsonl" />
+      </Folder>
+      <Folder name="code">
+        <File name="data.jsonl" />
+      </Folder>
+    </Folder>
+    <Folder name="configs">
+      <File name="pipeline.yaml" description="Quality profile" active />
+    </Folder>
+    <Folder name="work" description="Checkpoints and audit artifacts" />
+    <Folder name="out">
+      <File name="filtered.jsonl" description="Training output" />
+    </Folder>
+  </Folder>
+</FileTree>
+
+## Quality profile
+
+Create `configs/pipeline.yaml` based on the fast-first profile:
+
+```yaml
+meta:
+  id: corpus-pipeline
+  purpose: multi-source english corpus with balance caps
+
+cleaning:
+  enabled: true
+  semantic_cleaning: true
+  artifact_discovery: true
+  knowledge_extraction: true
+
+thresholds:
+  min_chars: 150
+  max_chars: 120000
+  min_alpha_ratio: 0.30
+  max_boilerplate_score: 0.45
+  max_toxicity: 0.45
+  max_pii_score: 0.45
+
+dedup:
+  exact: true
+  fuzzy: true
+  fuzzy_threshold: 0.90
+
+balance:
+  enabled: true
+  domain_caps:
+    web: 0.55
+    wiki: 0.18
+    code: 0.25
+  language_caps:
+    en: 0.75
+    other: 0.20
+
+licensing:
+  enabled: true
+  reject_proprietary: true
+```
+
+## Run with custom config
+
+```python
+import yaml
+from pathlib import Path
+from indw.filter.spec.quality import QualityPipelineConfig
+from indw.schedule import merge_with_quality
+
+cfg = QualityPipelineConfig.from_dict(
+    yaml.safe_load(Path("configs/pipeline.yaml").read_text(encoding="utf-8"))
+)
+
+result = merge_with_quality(
+    Path("./raw"),
+    Path("./out/filtered.jsonl"),
+    quality_config=cfg,
+    work_dir=Path("./work"),
+    workers=4,
+    fresh=True,
+)
+
+print(f"kept={result.get('kept', 0)} rejected={result.get('rejected', 0)}")
+```
+
+## Multi-source interleaving
+
+INDW interleaves sources by mixture weights. Place each source under `raw/<name>/data.jsonl`. The scheduler reads sources in weighted round-robin order, preserving per-source sequence for checkpoint resume.
+
+```yaml
+balance:
+  enabled: true
+  domain_caps:
+    web: 0.55
+    wiki: 0.18
+    code: 0.25
+```
+
+Domain caps limit the fraction of output from each content domain. High-quality documents can bypass caps when their quality score exceeds `quality_cap_bypass_score`.
+
+## Audit the run
+
+After merge completes, inspect pipeline health:
+
+```bash
+indw audit --kind pipeline --work-dir ./work
+```
+
+For Stage0 throughput verification:
+
+```bash
+indw audit --kind stage0 --workers 4
+```
+
+## Certification
+
+Before promoting to production scale:
+
+```bash
+indw validate
+indw benchmark
+indw audit --kind production
+```
+
+<Flow
+  nodes={[
+    { id: "1", data: { label: "Load YAML profile" } },
+    { id: "2", data: { label: "Interleave sources" } },
+    { id: "3", data: { label: "Stage0 + admission" } },
+    { id: "4", data: { label: "Heavy stage pools" } },
+    { id: "5", data: { label: "Ordered apply" } },
+    { id: "6", data: { label: "JSONL output" } }
+  ]}
+  edges={[
+    { id: "e1-2", source: "1", target: "2" },
+    { id: "e2-3", source: "2", target: "3" },
+    { id: "e3-4", source: "3", target: "4", animated: true },
+    { id: "e4-5", source: "4", target: "5" },
+    { id: "e5-6", source: "5", target: "6", animated: true }
+  ]}
+/>
+
+<NextSteps links={[
+  { title: "Ingestion Guide", href: "/docs/data-workflow/guides/ingestion", description: "Download from Hugging Face and normalize raw input." },
+  { title: "Filtering Guide", href: "/docs/data-workflow/guides/filtering", description: "Tune Stage0 gates and quality thresholds." }
+]} />

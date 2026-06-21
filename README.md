@@ -22,7 +22,7 @@ Or:
 make install-dev
 ```
 
-See [installation](docs/getting-started/installation.md) for extras and Docker.
+See [installation](docs/data-workflow/getting-started/installation.md) for extras and Docker.
 
 ## Quick start
 
@@ -48,23 +48,23 @@ indw audit --kind production
 indw validate --profile parity
 ```
 
-See [CLI reference](docs/user-guide/cli.md).
+See [CLI reference](docs/data-workflow/cli/commands.md).
 
 ## Documentation
 
-Full documentation: **[docs/README.md](docs/README.md)**
+Full documentation: **[docs/data-workflow/overview.mdx](docs/data-workflow/overview.mdx)**
 
 | Section | Topics |
 |---------|--------|
-| [Getting started](docs/getting-started/installation.md) | Install, quickstart, configuration |
-| [User guide](docs/user-guide/cli.md) | CLI, pipeline, workflows |
-| [Architecture](docs/architecture/overview.md) | Capabilities, execution, scheduler, dedup |
-| [Developer](docs/developer/contributing.md) | Contributing, testing, backends |
-| [Reference](docs/reference/commands.md) | Commands, config keys, public API |
+| [Getting started](docs/data-workflow/getting-started/installation.md) | Install, quickstart, configuration |
+| [User guide](docs/data-workflow/cli/commands.md) | CLI, pipeline, workflows |
+| [Architecture](docs/data-workflow/architecture/overview.md) | Capabilities, execution, scheduler, dedup |
+| [Developer](docs/data-workflow/developer/contributing.md) | Contributing, testing, backends |
+| [Reference](docs/data-workflow/reference/cli-reference.md) | Commands, config keys, public API |
 
 ## Contributing
 
-See [contributing guide](docs/developer/contributing.md).
+See [contributing guide](docs/data-workflow/developer/contributing.md).
 
 ## License
 

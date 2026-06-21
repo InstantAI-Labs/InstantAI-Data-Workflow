@@ -1,0 +1,132 @@
+---
+title: "Outputs"
+description: "Configure INDW output paths, JSONL format, token bin export, and work directory artifacts."
+order: 3
+sectionOrder: 6
+---
+
+# Outputs
+
+INDW produces training-ready JSONL output, optional token bin shards, and operational artifacts in the work directory.
+
+## Primary output
+
+The merge command writes filtered JSONL to the specified output path:
+
+```bash
+indw merge ./raw ./out/filtered.jsonl --work-dir ./work
+```
+
+Each output line is a JSON object with the cleaned document text and pipeline annotations.
+
+## Output document schema
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `text` | string | Cleaned document body |
+| `url` | string | Source URL (if present in input) |
+| `quality_score` | float | Composite quality score (0–1) |
+| `doc_tier` | int | PCI admission tier (0 = accepted) |
+| `doc_content_hash` | string | SHA-256 of normalized content |
+| `domain` | string | Content domain classification |
+| `meta` | object | Preserved input metadata |
+
+Example:
+
+```json
+{
+  "text": "Cleaned document content...",
+  "url": "https://example.com/article",
+  "quality_score": 0.84,
+  "doc_tier": 0,
+  "doc_content_hash": "e3b0c44298fc1c14...",
+  "domain": "web"
+}
+```
+
+## Output hash
+
+The merge result includes `sorted_output_hash` — a deterministic hash of the output content independent of processing order within batches:
+
+```python
+result = merge_with_quality("./raw", "./out/filtered.jsonl", work_dir="./work")
+print(result["sorted_output_hash"])
+```
+
+Use this hash to verify reproducibility across runs, backends, and worker counts.
+
+## Append mode
+
+Append new documents to existing output without clearing prior results:
+
+```python
+merge_with_quality(
+    "./raw", "./out/filtered.jsonl",
+    append=True,
+    resume=True,
+    work_dir="./work",
+)
+```
+
+## Token bin export
+
+Export token-binned training shards for direct dataloader consumption:
+
+```python
+from indw.store.export.fast_export import export_token_bins_fast
+
+export_token_bins_fast(
+    "./out/filtered.jsonl",
+    "./out/token_bins",
+    tokenizer_path="./tokenizer",
+)
+```
+
+Build PyTorch dataloaders from memmap streams:
+
+```python
+from indw.store.export.memmap_stream import build_pretrain_dataloader
+
+loader = build_pretrain_dataloader("./out/token_bins", batch_size=32)
+```
+
+## Work directory artifacts
+
+| Artifact | Path | Purpose |
+|----------|------|---------|
+| Checkpoint | `work/checkpoint.json` | Per-source line offsets |
+| Resolved config | `work/resolved_config.yaml` | Pinned quality profile |
+| Merge lock | `work/merge.lock` | Concurrency guard |
+| Exact dedup index | `work/dedup/exact_index.bin` | Hash index state |
+| Fuzzy LSH | `work/dedup/fuzzy_lsh.pkl` | MinHash state |
+| Stage profile | `work/audit/stage_profile.json` | Per-stage timing |
+| Reject log | `work/audit/reject_log.jsonl` | Rejection reasons |
+
+## Licensing provenance
+
+Include licensing metadata in output when needed for compliance:
+
+```yaml
+licensing:
+  enabled: true
+  include_provenance_in_jsonl: true
+```
+
+This adds license classification and provenance fields to each output document.
+
+## Compression
+
+Install the `compress` extra for ZSTD-compressed output streams:
+
+```bash
+pip install "indw[compress]"
+```
+
+<Callout type="tip" title="Output path on fast storage">
+  Write output JSONL to local SSD or high-throughput network storage. The apply coordinator serializes writes in document order — slow storage becomes the bottleneck at scale.
+</Callout>
+
+<NextSteps links={[
+  { title: "Storage Architecture", href: "/docs/data-workflow/architecture/storage", description: "Atomic I/O and corpus registry internals." },
+  { title: "First Pipeline", href: "/docs/data-workflow/getting-started/first-pipeline", description: "End-to-end output workflow." }
+]} />

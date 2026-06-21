@@ -1,0 +1,124 @@
+---
+title: "Semantic Selection"
+description: "Section-aware content selection, LCI routing, and semantic quality scoring."
+order: 6
+sectionOrder: 4
+---
+
+# Semantic Selection
+
+Semantic selection identifies the highest-value content within documents using section-aware routing, semantic scoring, and LCI (Learning Content Intelligence) guided promotion.
+
+## Section-aware selection
+
+When `semantic_selection.section_mode` is enabled, INDW routes document sections (headings, paragraphs, code blocks, lists) through independent quality assessments:
+
+```yaml
+semantic_selection:
+  enabled: true
+  section_mode: true
+```
+
+Section classification in `indw.extract.sections` identifies:
+
+| Section type | Routing |
+|-------------|---------|
+| Heading | Structure recovery |
+| Paragraph | Quality scoring |
+| Code block | Code preservation path |
+| Q&A pair | QA extraction |
+| List | Density assessment |
+| Reference | Citation handling |
+
+## Semantic cleaning thresholds
+
+Embedded semantic thresholds control line-level noise removal:
+
+```yaml
+cleaning:
+  semantic_embedded:
+    url_line_ratio: 0.35
+    lead_noise_remove: 0.48
+    edge_line_remove: 0.55
+    suffix_threshold_fence: 0.72
+    suffix_threshold_plain: 0.58
+```
+
+These thresholds apply per-line scoring during semantic cleaning. Lines above the removal threshold are stripped; lines below are preserved.
+
+## LCI routing
+
+LCI (Learning Content Intelligence) routes documents to appropriate heavy stage pools based on content fingerprints and PCI scores:
+
+```yaml
+orchestration:
+  enabled: true
+```
+
+When orchestration is enabled, `indw.schedule.intel.router` evaluates document fingerprints and promotes high-value documents to priority processing tiers. Documents with low intelligence scores may skip expensive extraction stages.
+
+## Document type assessment
+
+`indw.extract.assess` classifies documents by type (web, wiki, code, reasoning, conversation, docs, qa) and applies type-specific quality metrics:
+
+```python
+from indw.extract.assess.doc_type import classify_document_type
+
+doc_type = classify_document_type(text, url=url)
+# "web", "wiki", "code", "reasoning", ...
+```
+
+Document type feeds into balance caps and curriculum weighting.
+
+## Curriculum weighting
+
+```yaml
+curriculum:
+  enabled: true
+  stage: core
+  stage_weights:
+    reasoning: 1.2
+    code: 1.1
+    docs: 1.0
+    wiki: 0.95
+    web: 0.85
+    conversation: 0.8
+    qa: 0.85
+  min_stage_score: 0.42
+```
+
+Curriculum weighting adjusts effective quality scores by document type, promoting reasoning and code content in training mixtures.
+
+## Semantic diversity
+
+Synthetic defense uses semantic diversity scoring to detect homogeneous or machine-generated content:
+
+```yaml
+synthetic_defense:
+  enabled: true
+  min_semantic_diversity: 0.18
+  max_synthetic_score: 0.72
+```
+
+Documents with low semantic diversity (repetitive templates, generated filler) are rejected even if individual quality metrics pass.
+
+## Role-based extraction
+
+`indw.extract.roles` provides domain-specific extraction for education, publication, and other content roles. Role detection influences section routing and entity extraction schemas.
+
+<Mermaid chart={`
+flowchart TB
+  A[Document] --> B[Section Classify]
+  B --> C{Section Type}
+  C -->|Code| D[Code Preservation]
+  C -->|Q&A| E[QA Extraction]
+  C -->|Prose| F[Quality Score]
+  F --> G{Above threshold?}
+  G -->|Yes| H[Keep Section]
+  G -->|No| I[Drop Section]
+`} />
+
+<NextSteps links={[
+  { title: "Cleaning Guide", href: "/docs/data-workflow/guides/cleaning", description: "Semantic cleaning that precedes selection." },
+  { title: "Filtering Guide", href: "/docs/data-workflow/guides/filtering", description: "Quality thresholds applied after semantic scoring." }
+]} />

@@ -1,0 +1,108 @@
+---
+title: "Installation"
+description: "Install INDW and optional extras for language detection, dedup, embeddings, and distributed execution."
+order: 1
+sectionOrder: 1
+---
+
+# Installation
+
+INDW requires Python 3.10 or later. Install the base package from PyPI, then add optional extras for the capabilities your pipeline needs.
+
+## PyPI install
+
+```bash
+pip install indw
+indw doctor
+```
+
+`indw doctor` prints the installed version, resolved execution backend, and availability of key dependencies (`orjson`, `trafilatura`, `dask`).
+
+## Development install
+
+Clone the repository and install in editable mode with development dependencies:
+
+```bash
+git clone https://github.com/indw/indw.git
+cd indw
+pip install -e ".[dev,language]"
+indw doctor
+```
+
+Or use Make:
+
+```bash
+make install-dev
+indw doctor
+```
+
+## Optional extras
+
+Install extras only when needed. Each extra unlocks a specific subsystem without pulling unnecessary dependencies.
+
+| Extra | Capability | Packages |
+|-------|------------|----------|
+| `language` | Language detection | langid |
+| `dedup` | Fuzzy MinHash dedup | datasketch |
+| `ann` | ANN index for semantic dedup | faiss-cpu |
+| `embedding` | Sentence-transformer providers | sentence-transformers |
+| `distributed` | Dask cluster backend | dask, distributed |
+| `monitor` | Prometheus and OpenTelemetry | prometheus_client, opentelemetry |
+| `compress` | ZSTD compression | zstandard |
+| `all` | All optional capabilities | all of the above |
+
+```bash
+pip install "indw[language,dedup,distributed]"
+```
+
+For full production pipelines with semantic dedup and cluster execution:
+
+```bash
+pip install -e ".[all]"
+```
+
+## System requirements
+
+| Resource | Minimum | Recommended |
+|----------|---------|-------------|
+| Python | 3.10 | 3.11 or 3.12 |
+| RAM | 4 GB | 16 GB+ for 10GB+ corpora |
+| Disk | 2× corpus size | SSD for work directories |
+| CPU | 2 cores | 8+ cores with `--workers` |
+
+<Callout type="warn" title="FAISS on ARM">
+  `faiss-cpu` wheels may not be available on all ARM platforms. Use exact + fuzzy dedup only, or build FAISS from source.
+</Callout>
+
+## Verify installation
+
+```bash
+indw doctor
+```
+
+Expected output:
+
+```
+indw=1.0 python=3.11.x platform=...
+backend=multiprocess resolved=multiprocess
+orjson=ok
+trafilatura=ok
+dask=ok
+```
+
+If `dask=missing` and you need distributed execution, install the `distributed` extra.
+
+## Docker
+
+Build from the repository Dockerfile for reproducible CI and cluster images:
+
+```bash
+docker build -t indw:latest .
+docker run --rm -v $(pwd)/raw:/data/raw -v $(pwd)/out:/data/out indw:latest \
+  indw merge /data/raw /data/out/filtered.jsonl --work-dir /data/work --fresh
+```
+
+<NextSteps links={[
+  { title: "Quickstart", href: "/docs/data-workflow/getting-started/quickstart", description: "Run your first merge in under five minutes." },
+  { title: "Configuration", href: "/docs/data-workflow/getting-started/configuration", description: "Load YAML quality profiles and environment variables." }
+]} />

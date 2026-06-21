@@ -1,0 +1,148 @@
+---
+title: "Testing"
+description: "INDW test profiles, pytest markers, and writing subsystem tests for pipeline changes."
+order: 4
+sectionOrder: 8
+---
+
+# Testing
+
+INDW uses pytest with marker-based profiles for unit, integration, parity, and certification testing. Run tests via the CLI or directly with pytest.
+
+## Test profiles
+
+```bash
+indw test --profile unit        # fast, default
+indw test --profile critical    # production-critical subsystems
+indw test --profile parity      # backend parity (same as indw validate)
+indw test --profile integration # integration + slow
+indw test --profile smoke       # end-to-end smoke
+```
+
+| Profile | Markers | Parallel | Paths |
+|---------|---------|----------|-------|
+| `unit` | `not integration and not slow` | Yes (`-n auto`) | `tests/` |
+| `critical` | `critical and not integration` | No | `tests/subsystems/` |
+| `parity` | `integration` | No | parity test files |
+| `integration` | `integration or slow` | No | `tests/` |
+| `smoke` | `smoke` | No | `tests/` |
+
+## Parity tests
+
+Parity tests verify determinism across backends and worker counts:
+
+```bash
+indw validate
+```
+
+Key parity test files:
+
+| File | Verifies |
+|------|----------|
+| `test_stage_pool_parity.py` | Stage pool output consistency |
+| `test_parallel_merge_parity.py` | Workers=1 vs workers=N hash match |
+| `test_tier_admission_parity.py` | Admission tier consistency |
+| `test_execution_backend.py` | Local vs multiprocess backend match |
+
+## Pytest markers
+
+```python
+import pytest
+
+@pytest.mark.critical
+def test_quality_gate_rejects_short_docs():
+    ...
+
+@pytest.mark.integration
+def test_merge_multiprocess_parity():
+    ...
+
+@pytest.mark.property
+def test_content_hash_deterministic():
+    ...
+
+@pytest.mark.benchmark
+def test_stage0_throughput():
+    ...
+```
+
+Available markers: `integration`, `slow`, `smoke`, `critical`, `property`, `benchmark`, `certification`.
+
+## Running pytest directly
+
+```bash
+cd instant-ai/model_registry/data
+python -m pytest tests/subsystems/ -m "critical" -v
+python -m pytest tests/subsystems/test_parallel_merge_parity.py -v
+```
+
+Extra pytest arguments pass through the CLI:
+
+```bash
+indw test --profile unit -k test_stage0
+indw test --profile critical -- --cov=indw --cov-report=term-missing
+```
+
+## Writing subsystem tests
+
+Place integration tests in `tests/subsystems/`. Follow existing patterns:
+
+```python
+import pytest
+from pathlib import Path
+from indw.filter.spec.quality import QualityPipelineConfig
+from indw.schedule import merge_with_quality
+
+@pytest.mark.critical
+def test_merge_produces_output(tmp_path):
+    raw = tmp_path / "raw" / "test"
+    raw.mkdir(parents=True)
+    (raw / "data.jsonl").write_text('{"text": "A valid document with enough content to pass gates."}\n')
+
+    out = tmp_path / "out.jsonl"
+    work = tmp_path / "work"
+
+    result = merge_with_quality(raw.parent, out, work_dir=work, fresh=True, workers=1)
+    assert result["kept"] >= 1
+    assert out.exists()
+```
+
+## Test fixtures
+
+Red team and regression fixtures live in `tests/fixtures/`:
+
+```
+tests/fixtures/
+└── redteam/
+    ├── redteam_archive.jsonl
+    └── redteam_event.jsonl
+```
+
+Use fixtures for adversarial content testing (PII, toxicity, prompt injection).
+
+## Coverage
+
+```bash
+pip install -e ".[dev]"
+python -m pytest tests/ --cov=indw --cov=app --cov-report=term-missing
+```
+
+Coverage threshold is 55% (`fail_under` in `pyproject.toml`).
+
+## CI recommendation
+
+```bash
+indw doctor
+indw test --profile unit
+indw test --profile critical
+indw validate
+```
+
+<Callout type="tip" title="Test before merge">
+  Pipeline changes that affect acceptance decisions require `indw validate` to pass. Hash parity is a merge blocker for production pipelines.
+</Callout>
+
+<NextSteps links={[
+  { title: "Contributing", href: "/docs/data-workflow/developer/contributing", description: "PR checklist and code standards." },
+  { title: "CLI Commands", href: "/docs/data-workflow/cli/commands", description: "indw test and indw validate commands." }
+]} />

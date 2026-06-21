@@ -1,0 +1,138 @@
+---
+title: "Semantic Cleaning"
+description: "ACIM artifact discovery, HTML normalization, boilerplate removal, and structure recovery."
+order: 3
+sectionOrder: 4
+---
+
+# Semantic Cleaning
+
+The cleaning subsystem (`indw.clean`) transforms raw HTML and noisy text into clean, structured documents. Semantic cleaning runs after Stage0 and before knowledge extraction.
+
+## Cleaning pipeline
+
+`CorpusCleaningPipeline` orchestrates the full cleaning sequence:
+
+<Flow
+  nodes={[
+    { id: "1", data: { label: "HTML Cleaning" } },
+    { id: "2", data: { label: "UI Noise Removal" } },
+    { id: "3", data: { label: "Artifact Discovery" } },
+    { id: "4", data: { label: "Boilerplate Trim" } },
+    { id: "5", data: { label: "Truncation Repair" } },
+    { id: "6", data: { label: "Document Gate" } }
+  ]}
+  edges={[
+    { id: "e1-2", source: "1", target: "2" },
+    { id: "e2-3", source: "2", target: "3", animated: true },
+    { id: "e3-4", source: "3", target: "4" },
+    { id: "e4-5", source: "4", target: "5" },
+    { id: "e5-6", source: "5", target: "6", animated: true }
+  ]}
+/>
+
+## Configuration
+
+```yaml
+cleaning:
+  enabled: true
+  semantic_cleaning: true
+  legacy_regex_cleaning: true
+  inline_artifact_removal: true
+  document_understanding: true
+  artifact_discovery: true
+  artifact_discovery_trim: true
+  artifact_discovery_shadow: false
+  truncation_repair: true
+  code_preservation: true
+  preserve_code_fences: true
+  dedupe_paragraphs: true
+  drop_acknowledgements: true
+  drop_moderator_notices: true
+  drop_quoted_replies: true
+  strip_license_blocks: true
+  strip_copyright_lines: true
+  document_gate: true
+  stages:
+    html_cleaning: true
+    ui_noise_removal: true
+    metadata_removal: true
+    pretraining_metadata_cleaning: true
+    content_compression: true
+  thresholds:
+    min_chars_after_clean: 200
+    max_ui_noise_ratio: 0.40
+    max_boilerplate_ratio: 0.50
+    max_duplicate_ratio: 0.32
+```
+
+## ACIM artifact discovery
+
+ACIM (Artifact Content Identification Model) discovers structural noise — navigation menus, cookie banners, comment sections, and template boilerplate — while preserving substantive content.
+
+```yaml
+cleaning:
+  artifact_discovery: true
+  artifact_discovery_trim: true    # remove discovered artifacts
+  artifact_discovery_shadow: false # log-only mode for calibration
+```
+
+Shadow mode logs artifact scores without trimming. Use shadow mode when calibrating thresholds on a new corpus type.
+
+## HTML processing
+
+INDW uses `trafilatura` for HTML extraction with custom post-processing:
+
+- Metadata removal (author, date, tags)
+- UI noise removal (nav, footer, sidebar)
+- Code fence preservation
+- Link text normalization
+
+## Semantic embedded thresholds
+
+Fine-tune semantic cleaning aggressiveness:
+
+```yaml
+cleaning:
+  semantic_embedded:
+    url_line_ratio: 0.35
+    lead_noise_remove: 0.48
+    edge_line_remove: 0.55
+    suffix_threshold_fence: 0.72
+    suffix_threshold_plain: 0.58
+```
+
+## Document gate
+
+After cleaning, `document_gate` validates the cleaned document against post-clean thresholds:
+
+```python
+from indw.clean.gate.evaluate import document_gate_raw
+
+features = document_gate_raw(cleaned_text)
+# features: alpha_ratio, entropy, boilerplate_score, ui_noise_ratio, ...
+```
+
+Documents failing the document gate are rejected before entering extraction.
+
+## Knowledge extraction
+
+Enable structure recovery alongside cleaning:
+
+```yaml
+cleaning:
+  knowledge_extraction: true
+  qa_extraction:
+    enabled: true
+```
+
+Knowledge extraction routes sections (headings, paragraphs, code blocks, Q&A pairs) for downstream processing in `indw.extract`.
+
+<Callout type="tip" title="Minimal mode">
+  Set `cleaning.minimal: true` for pre-cleaned corpora. This skips artifact discovery and aggressive boilerplate removal while retaining document gate validation.
+</Callout>
+
+<NextSteps links={[
+  { title: "Semantic Guide", href: "/docs/data-workflow/guides/semantic", description: "Section-aware semantic selection after cleaning." },
+  { title: "Knowledge Extract", href: "/docs/data-workflow/architecture/overview", description: "What happens to cleaned documents in the extraction stage." }
+]} />

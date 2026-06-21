@@ -1,0 +1,118 @@
+---
+title: "Deduplication"
+description: "Exact hash, MinHash fuzzy, and semantic embedding deduplication at petabyte scale."
+order: 4
+sectionOrder: 4
+---
+
+# Deduplication
+
+INDW deduplicates documents at three levels: exact content hash, fuzzy MinHash near-duplicate detection, and semantic embedding similarity. Dedup runs during the merge pipeline and state persists in the work directory for resume.
+
+## Dedup stack
+
+| Layer | Algorithm | Threshold | Extra required |
+|-------|-----------|-------------|----------------|
+| Exact | SHA-256 content hash | Exact match | None |
+| Fuzzy | MinHash LSH | Jaccard ≥ 0.90 (default) | `dedup` |
+| Semantic | Embedding + FAISS ANN | Hamming ≤ 4 (default) | `ann`, `embedding` |
+
+<Flow
+  nodes={[
+    { id: "1", data: { label: "Document", icon: "📄" } },
+    { id: "2", data: { label: "Exact Hash", icon: "🔑" } },
+    { id: "3", data: { label: "MinHash Fuzzy", icon: "🔀" } },
+    { id: "4", data: { label: "Semantic Embed", icon: "🧠" } },
+    { id: "5", data: { label: "Keep", icon: "✅", valid: true } },
+    { id: "6", data: { label: "Drop Dup", icon: "🗑️", valid: false } }
+  ]}
+  edges={[
+    { id: "e1-2", source: "1", target: "2" },
+    { id: "e2-3", source: "2", target: "3", label: "unique" },
+    { id: "e2-6", source: "2", target: "6", label: "exact dup", color: "#ef4444" },
+    { id: "e3-4", source: "3", target: "4", label: "unique" },
+    { id: "e3-6", source: "3", target: "6", label: "fuzzy dup", color: "#ef4444" },
+    { id: "e4-5", source: "4", target: "5", label: "unique", color: "#22c55e", animated: true },
+    { id: "e4-6", source: "4", target: "6", label: "semantic dup", color: "#ef4444" }
+  ]}
+/>
+
+## Configuration
+
+```yaml
+dedup:
+  exact: true
+  fuzzy: true
+  fuzzy_threshold: 0.90
+  fuzzy_num_perm: 128
+  fuzzy_quality_margin: 0.05
+  semantic: true
+  semantic_hamming_threshold: 4
+  semantic_jaccard_threshold: 0.72
+  semantic_recent_jaccard_threshold: 0.85
+  skip_within_document_chunks: true
+  embedding:
+    model: "sentence-transformers/all-MiniLM-L6-v2"
+    batch_size: 64
+    device: "cpu"
+```
+
+## Exact dedup
+
+Exact dedup uses `content_hash` from normalized text. The hash index is global across all sources in a merge run. Stage0 also performs fast per-batch exact doc dedup before heavy processing.
+
+```python
+from indw.dedup.normalize import content_hash
+
+h = content_hash("Normalized document text")
+```
+
+## Fuzzy dedup (MinHash)
+
+MinHash LSH detects near-duplicates with high Jaccard similarity. Install the `dedup` extra:
+
+```bash
+pip install "indw[dedup]"
+```
+
+`fuzzy_quality_margin` keeps the higher-quality document when duplicates are found — the survivor is the one with the better quality score, not necessarily the first seen.
+
+## Semantic dedup
+
+Semantic dedup embeds documents and queries a FAISS ANN index for paraphrase-level duplicates:
+
+```bash
+pip install "indw[ann,embedding]"
+```
+
+```yaml
+dedup:
+  semantic: true
+  embedding:
+    model: "sentence-transformers/all-MiniLM-L6-v2"
+    batch_size: 64
+```
+
+`semantic_recent_jaccard_threshold` applies a stricter threshold to recently seen documents, catching burst duplicates common in web crawls.
+
+## Within-document dedup
+
+```yaml
+dedup:
+  skip_within_document_chunks: true
+```
+
+When enabled, dedup skips comparing chunks within the same document. Disable for corpora where intra-document repetition is a quality signal.
+
+## Resume and replay
+
+Dedup indexes persist in the work directory. On resume, `restore_merge_dedup_from_output` rebuilds indexes from prior output. Use `--fresh` to reset all dedup state.
+
+<Callout type="warn" title="Semantic dedup memory">
+  FAISS indexes grow with corpus size. For corpora above 100M documents, consider fuzzy-only dedup or shard semantic dedup across multiple merge runs with post-merge exact dedup.
+</Callout>
+
+<NextSteps links={[
+  { title: "Storage Architecture", href: "/docs/data-workflow/architecture/storage", description: "How dedup indexes persist in work directories." },
+  { title: "Pipeline Configuration", href: "/docs/data-workflow/configuration/pipeline", description: "Full dedup config schema." }
+]} />
