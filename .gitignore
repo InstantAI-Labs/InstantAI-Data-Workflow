@@ -43,6 +43,7 @@ artifacts/
 reports/
 *.json
 !configs/**/*.yaml
+!docs/**/*.json
 production_scale_audit.*
 stage0_production_verify_report.*
 *.log
