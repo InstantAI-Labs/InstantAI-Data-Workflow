@@ -4,7 +4,7 @@
   "status": "Beta",
   "framework": "python",
   "description": "Instant Data Workflow",
-  "repository": "https://github.com/indw/indw.git",
+  "repository": "https://github.com/InstantAI-Labs/InstantAI-Data-Workflow.git",
   "branch": "main",
-  "docsPath": "docs/data-workflow"
+  "docsPath": "docs"
 }
