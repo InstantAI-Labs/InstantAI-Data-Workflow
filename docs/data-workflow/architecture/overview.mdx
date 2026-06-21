@@ -22,29 +22,7 @@ INDW runs a single canonical execution graph. Documents flow through ingest and 
 Ingest → Stage0 → Admission → Heavy pools → Apply → Output
 ```
 
-<Flow
-  nodes={[
-    { id: "1", data: { label: "Ingest Raw Docs", icon: "📥" } },
-    { id: "2", data: { label: "Stage0 Filter", icon: "🔍" } },
-    { id: "3", data: { label: "PCI Admission", icon: "🚦" } },
-    { id: "4", data: { label: "Clean Pool", icon: "✨", valid: true } },
-    { id: "5", data: { label: "Extract Pool", icon: "🧠", valid: true } },
-    { id: "6", data: { label: "Dedup Pool", icon: "👯" } },
-    { id: "7", data: { label: "Apply Coordinator", icon: "⚙️" } },
-    { id: "8", data: { label: "Store JSONL", icon: "💾" } },
-    { id: "9", data: { label: "Reject", icon: "🗑️", valid: false } }
-  ]}
-  edges={[
-    { id: "e1-2", source: "1", target: "2" },
-    { id: "e2-3", source: "2", target: "3" },
-    { id: "e2-9", source: "2", target: "9", label: "Stage0 reject", color: "#ef4444" },
-    { id: "e3-4", source: "3", target: "4", label: "Tier 0+", color: "#22c55e", animated: true },
-    { id: "e4-5", source: "4", target: "5" },
-    { id: "e5-6", source: "5", target: "6" },
-    { id: "e6-7", source: "6", target: "7" },
-    { id: "e7-8", source: "7", target: "8", animated: true }
-  ]}
-/>
+<Flow nodesJSON='[{"id":"1","data":{"label":"Ingest Raw Docs","icon":"📥"}},{"id":"2","data":{"label":"Stage0 Filter","icon":"🔍"}},{"id":"3","data":{"label":"PCI Admission","icon":"🚦"}},{"id":"4","data":{"label":"Clean Pool","icon":"✨","valid":true}},{"id":"5","data":{"label":"Extract Pool","icon":"🧠","valid":true}},{"id":"6","data":{"label":"Dedup Pool","icon":"👯"}},{"id":"7","data":{"label":"Apply Coordinator","icon":"⚙️"}},{"id":"8","data":{"label":"Store JSONL","icon":"💾"}},{"id":"9","data":{"label":"Reject","icon":"🗑️","valid":false}}]' edgesJSON='[{"id":"e1-2","source":"1","target":"2"},{"id":"e2-3","source":"2","target":"3"},{"id":"e2-9","source":"2","target":"9","label":"Stage0 reject","color":"#ef4444"},{"id":"e3-4","source":"3","target":"4","label":"Tier 0+","color":"#22c55e","animated":true},{"id":"e4-5","source":"4","target":"5"},{"id":"e5-6","source":"5","target":"6"},{"id":"e6-7","source":"6","target":"7"},{"id":"e7-8","source":"7","target":"8","animated":true}]' />
 
 ## Subsystems
 

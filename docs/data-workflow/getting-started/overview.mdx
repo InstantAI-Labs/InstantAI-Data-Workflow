@@ -1,11 +1,11 @@
 ---
-title: "INDW Overview"
+title: "Overview"
 description: "InstantAI Data Workflow — open-source corpus pipelines for petabyte-scale AI training data preparation."
 order: 0
 sectionOrder: 0
 ---
 
-# INDW Overview
+# Overview
 
 **InstantAI Data Workflow (INDW)** is an open-source data pipeline that ingests raw documents, applies multi-stage filtering and semantic cleaning, deduplicates at scale, and emits deterministic JSONL suitable for large-scale model training.
 
@@ -20,25 +20,7 @@ sectionOrder: 0
 
 INDW transforms heterogeneous raw corpora into training-ready datasets. The same configuration and input corpus produce the same acceptance decisions and output hash whether you run on a laptop, a multi-core server, or a Dask cluster.
 
-<Flow
-  nodes={[
-    { id: "1", data: { label: "Ingest", icon: "📥" } },
-    { id: "2", data: { label: "Stage0 Filter", icon: "🔍" } },
-    { id: "3", data: { label: "Semantic Clean", icon: "✨" } },
-    { id: "4", data: { label: "Knowledge Extract", icon: "🧠", valid: true } },
-    { id: "5", data: { label: "Deduplicate", icon: "👯" } },
-    { id: "6", data: { label: "Scheduler Apply", icon: "⚙️" } },
-    { id: "7", data: { label: "Store JSONL", icon: "💾" } }
-  ]}
-  edges={[
-    { id: "e1-2", source: "1", target: "2" },
-    { id: "e2-3", source: "2", target: "3", animated: true },
-    { id: "e3-4", source: "3", target: "4" },
-    { id: "e4-5", source: "4", target: "5" },
-    { id: "e5-6", source: "5", target: "6" },
-    { id: "e6-7", source: "6", target: "7", animated: true }
-  ]}
-/>
+<Flow nodesJSON='[{"id":"1","data":{"label":"Ingest","icon":"📥"}},{"id":"2","data":{"label":"Stage0 Filter","icon":"🔍"}},{"id":"3","data":{"label":"Semantic Clean","icon":"✨"}},{"id":"4","data":{"label":"Knowledge Extract","icon":"🧠","valid":true},"type":"custom"},{"id":"5","data":{"label":"Deduplicate","icon":"👯"}},{"id":"6","data":{"label":"Scheduler Apply","icon":"⚙️"}},{"id":"7","data":{"label":"Store JSONL","icon":"💾"}}]' edgesJSON='[{"id":"e1-2","source":"1","target":"2"},{"id":"e2-3","source":"2","target":"3","animated":true},{"id":"e3-4","source":"3","target":"4"},{"id":"e4-5","source":"4","target":"5"},{"id":"e5-6","source":"5","target":"6"},{"id":"e6-7","source":"6","target":"7","animated":true}]' />
 
 ## Core capabilities
 

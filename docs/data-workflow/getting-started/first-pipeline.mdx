@@ -145,23 +145,7 @@ indw benchmark
 indw audit --kind production
 ```
 
-<Flow
-  nodes={[
-    { id: "1", data: { label: "Load YAML profile" } },
-    { id: "2", data: { label: "Interleave sources" } },
-    { id: "3", data: { label: "Stage0 + admission" } },
-    { id: "4", data: { label: "Heavy stage pools" } },
-    { id: "5", data: { label: "Ordered apply" } },
-    { id: "6", data: { label: "JSONL output" } }
-  ]}
-  edges={[
-    { id: "e1-2", source: "1", target: "2" },
-    { id: "e2-3", source: "2", target: "3" },
-    { id: "e3-4", source: "3", target: "4", animated: true },
-    { id: "e4-5", source: "4", target: "5" },
-    { id: "e5-6", source: "5", target: "6", animated: true }
-  ]}
-/>
+<Flow nodesJSON='[{"id":"1","data":{"label":"Load YAML profile"}},{"id":"2","data":{"label":"Interleave sources"}},{"id":"3","data":{"label":"Stage0 + admission"}},{"id":"4","data":{"label":"Heavy stage pools"}},{"id":"5","data":{"label":"Ordered apply"}},{"id":"6","data":{"label":"JSONL output"}}]' edgesJSON='[{"id":"e1-2","source":"1","target":"2"},{"id":"e2-3","source":"2","target":"3"},{"id":"e3-4","source":"3","target":"4","animated":true},{"id":"e4-5","source":"4","target":"5"},{"id":"e5-6","source":"5","target":"6","animated":true}]' />
 
 <NextSteps links={[
   { title: "Ingestion Guide", href: "/docs/data-workflow/guides/ingestion", description: "Download from Hugging Face and normalize raw input." },

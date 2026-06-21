@@ -13,23 +13,7 @@ The cleaning subsystem (`indw.clean`) transforms raw HTML and noisy text into cl
 
 `CorpusCleaningPipeline` orchestrates the full cleaning sequence:
 
-<Flow
-  nodes={[
-    { id: "1", data: { label: "HTML Cleaning" } },
-    { id: "2", data: { label: "UI Noise Removal" } },
-    { id: "3", data: { label: "Artifact Discovery" } },
-    { id: "4", data: { label: "Boilerplate Trim" } },
-    { id: "5", data: { label: "Truncation Repair" } },
-    { id: "6", data: { label: "Document Gate" } }
-  ]}
-  edges={[
-    { id: "e1-2", source: "1", target: "2" },
-    { id: "e2-3", source: "2", target: "3", animated: true },
-    { id: "e3-4", source: "3", target: "4" },
-    { id: "e4-5", source: "4", target: "5" },
-    { id: "e5-6", source: "5", target: "6", animated: true }
-  ]}
-/>
+<Flow nodesJSON='[{"id":"1","data":{"label":"HTML Cleaning"}},{"id":"2","data":{"label":"UI Noise Removal"}},{"id":"3","data":{"label":"Artifact Discovery"}},{"id":"4","data":{"label":"Boilerplate Trim"}},{"id":"5","data":{"label":"Truncation Repair"}},{"id":"6","data":{"label":"Document Gate"}}]' edgesJSON='[{"id":"e1-2","source":"1","target":"2"},{"id":"e2-3","source":"2","target":"3","animated":true},{"id":"e3-4","source":"3","target":"4"},{"id":"e4-5","source":"4","target":"5"},{"id":"e5-6","source":"5","target":"6","animated":true}]' />
 
 ## Configuration
 

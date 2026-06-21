@@ -20,25 +20,7 @@ Stage0 is the first filtering layer in every INDW pipeline. It runs lightweight,
 
 Stage0 applies a sequence of deterministic gates in `process_stage0_batch`. A document fails as soon as any gate rejects it — no further checks run. Gates are ordered cheapest-first to maximize throughput.
 
-<Flow
-  nodes={[
-    { id: "1", data: { label: "Language Gate", icon: "🌐" } },
-    { id: "2", data: { label: "Exact Doc Dedup", icon: "🔑" } },
-    { id: "3", data: { label: "Structural Filter", icon: "📏" } },
-    { id: "4", data: { label: "Metadata Enrich", icon: "🏷️", valid: true } },
-    { id: "5", data: { label: "PCI Admission", icon: "🚦", valid: true } },
-    { id: "6", data: { label: "Reject", icon: "🗑️", valid: false } }
-  ]}
-  edges={[
-    { id: "e1-2", source: "1", target: "2", label: "pass", color: "#22c55e" },
-    { id: "e1-6", source: "1", target: "6", label: "language", color: "#ef4444" },
-    { id: "e2-3", source: "2", target: "3" },
-    { id: "e2-6", source: "2", target: "6", label: "dup", color: "#ef4444" },
-    { id: "e3-4", source: "3", target: "4" },
-    { id: "e3-6", source: "3", target: "6", label: "structural", color: "#ef4444" },
-    { id: "e4-5", source: "4", target: "5", animated: true }
-  ]}
-/>
+<Flow nodesJSON='[{"id":"1","data":{"label":"Language Gate","icon":"🌐"}},{"id":"2","data":{"label":"Exact Doc Dedup","icon":"🔑"}},{"id":"3","data":{"label":"Structural Filter","icon":"📏"}},{"id":"4","data":{"label":"Metadata Enrich","icon":"🏷️","valid":true}},{"id":"5","data":{"label":"PCI Admission","icon":"🚦","valid":true}},{"id":"6","data":{"label":"Reject","icon":"🗑️","valid":false}}]' edgesJSON='[{"id":"e1-2","source":"1","target":"2","label":"pass","color":"#22c55e"},{"id":"e1-6","source":"1","target":"6","label":"language","color":"#ef4444"},{"id":"e2-3","source":"2","target":"3"},{"id":"e2-6","source":"2","target":"6","label":"dup","color":"#ef4444"},{"id":"e3-4","source":"3","target":"4"},{"id":"e3-6","source":"3","target":"6","label":"structural","color":"#ef4444"},{"id":"e4-5","source":"4","target":"5","animated":true}]' />
 
 ## Built-in gates
 
