@@ -94,9 +94,9 @@ LICENSE_PIPELINE_VERSION = 'instant-license-v1'
 TOKEN_SHARD_VERSION = 'instant-token-shard-v1'
 CORPUS_REFINE_VERSION = 'instant-corpus-refine-v2'
 
-DEFAULT_QUALITY_SPEC = 'data/filtering/quality_fast_first'
-DEFAULT_PIPELINE_SPEC = 'data/pipeline/default'
-DEFAULT_REFINER_SPEC = 'data/refining/default'
+DEFAULT_QUALITY_SPEC = 'filtering/quality_smoke_5mb'
+DEFAULT_PIPELINE_SPEC = 'pipeline/default'
+DEFAULT_REFINER_SPEC = 'refining/default'
 
 STRUCT_TRUNC_REPAIR_PROB = 0.35
 STRUCT_TRUNC_REMOVE_PROB = 0.72

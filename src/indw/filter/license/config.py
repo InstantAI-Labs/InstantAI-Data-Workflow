@@ -5,10 +5,9 @@ from copy import deepcopy
 from functools import lru_cache
 from typing import Any, Optional
 
-from orchestration.resolver.refs import ConfigRef
-from orchestration.resolver.resolver import Resolver
+from indw.config.loader import ConfigRef, Resolver
 
-DEFAULT_LICENSE_SPEC = 'data/licensing/default'
+DEFAULT_LICENSE_SPEC = 'licensing/default'
 
 def _require_frozenset(raw: dict[str, Any], key: str) -> frozenset[str]:
     val = raw.get(key)

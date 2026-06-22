@@ -5,9 +5,7 @@ import unicodedata
 from dataclasses import dataclass
 from typing import Iterable
 
-from orchestration.resolver.immutable import thaw
-from orchestration.resolver.refs import ConfigRef
-from orchestration.resolver.resolver import Resolver
+from indw.config.loader import ConfigRef, Resolver, thaw
 
 @dataclass(frozen=True)
 class ScriptFamilySpec:

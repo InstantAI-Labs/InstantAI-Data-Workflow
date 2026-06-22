@@ -5,10 +5,9 @@ from copy import deepcopy
 from functools import lru_cache
 from typing import Any, Optional
 
-from orchestration.resolver.refs import ConfigRef
-from orchestration.resolver.resolver import Resolver
+from indw.config.loader import ConfigRef, Resolver, thaw
 
-DEFAULT_EVALUATION_SPEC = 'data/corpus/evaluation'
+DEFAULT_EVALUATION_SPEC = 'corpus/evaluation'
 
 @dataclass
 class PromotionPolicy:
@@ -85,6 +84,4 @@ class CorpusEvaluationConfig:
 @lru_cache(maxsize=8)
 def _resolve_corpus_eval_cached(spec: str) -> CorpusEvaluationConfig:
     resolved = Resolver.default().resolve(ConfigRef(kind='corpus', id=spec))
-    from orchestration.resolver.immutable import thaw
-
     return CorpusEvaluationConfig.from_dict(thaw(resolved.raw))

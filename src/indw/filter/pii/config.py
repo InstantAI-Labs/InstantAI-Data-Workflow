@@ -5,10 +5,9 @@ from copy import deepcopy
 from functools import lru_cache
 from typing import Any, Optional
 
-from orchestration.resolver.refs import ConfigRef
-from orchestration.resolver.resolver import Resolver
+from indw.config.loader import ConfigRef, Resolver, thaw
 
-DEFAULT_PII_SPEC = 'data/safety/pii'
+DEFAULT_PII_SPEC = 'safety/pii'
 DEFAULT_ENTITY_TYPES = (
     'PERSON',
     'ORGANIZATION',

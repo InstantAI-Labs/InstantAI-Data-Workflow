@@ -4,8 +4,7 @@ from dataclasses import dataclass, field
 from typing import Any, Optional
 
 from indw.config.defaults import DEFAULT_REFINER_SPEC, MIN_CHARS_AFTER_REPAIR
-from orchestration.resolver.refs import ConfigRef
-from orchestration.resolver.resolver import Resolver
+from indw.config.loader import ConfigRef, Resolver
 
 DIVERSITY_PROTECTED_AXES = frozenset({
     'educational', 'factual', 'reasoning', 'referential', 'technical', 'procedural',

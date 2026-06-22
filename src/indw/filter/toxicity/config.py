@@ -5,11 +5,9 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any, Optional
 
-from orchestration.resolver.immutable import thaw
-from orchestration.resolver.refs import ConfigRef
-from orchestration.resolver.resolver import CONFIG_ROOT, Resolver
+from indw.config.loader import ConfigRef, Resolver, thaw
 
-DEFAULT_TOXICITY_SPEC = 'data/safety/toxicity'
+DEFAULT_TOXICITY_SPEC = 'safety/toxicity'
 DEFAULT_CATEGORIES = (
     'hate',
     'harassment',

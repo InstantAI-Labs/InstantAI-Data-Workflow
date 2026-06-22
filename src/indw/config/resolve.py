@@ -6,9 +6,7 @@ from dataclasses import dataclass
 from functools import lru_cache
 from typing import Any, Optional
 
-from orchestration.resolver.immutable import thaw
-from orchestration.resolver.refs import ConfigRef
-from orchestration.resolver.resolver import Resolver
+from indw.config.loader import ConfigRef, Resolver, thaw
 
 from indw.config.defaults import DEFAULT_PIPELINE_SPEC, DEFAULT_QUALITY_SPEC
 from indw.config.validation import (

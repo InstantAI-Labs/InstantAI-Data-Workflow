@@ -11,8 +11,6 @@ from indw.ingest.resume import run_incremental_stage
 from indw.config.resolve import PipelineConfigContext
 from indw.filter.spec.quality import QualityPipelineConfig
 from indw.schedule import merge_with_quality
-from orchestration.resolver.refs import ConfigRef
-from orchestration.resolver.resolver import Resolver
 logger = logging.getLogger(__name__)
 
 class FastDatasetPipeline:

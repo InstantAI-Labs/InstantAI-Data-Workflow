@@ -47,8 +47,7 @@ from indw.config.defaults import (
     STRUCT_TRUNC_REMOVE_PROB,
     STRUCT_TRUNC_REPAIR_PROB,
 )
-from orchestration.resolver.refs import ConfigRef
-from orchestration.resolver.resolver import Resolver
+from indw.config.loader import ConfigRef, Resolver
 
 @dataclass
 class StageToggle:

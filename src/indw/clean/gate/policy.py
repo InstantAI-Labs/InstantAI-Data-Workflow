@@ -4,11 +4,9 @@ from dataclasses import dataclass
 from functools import lru_cache
 from typing import Any
 
-from orchestration.resolver.immutable import thaw
-from orchestration.resolver.refs import ConfigRef
-from orchestration.resolver.resolver import Resolver
+from indw.config.loader import ConfigRef, Resolver, thaw
 
-DEFAULT_DOCUMENT_GATE_SPEC = 'data/filtering/document_gate'
+DEFAULT_DOCUMENT_GATE_SPEC = 'filtering/document_gate'
 
 def _require_float(block: dict[str, Any], key: str) -> float:
     if key not in block:

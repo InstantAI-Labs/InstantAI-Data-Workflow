@@ -5,10 +5,9 @@ from copy import deepcopy
 from functools import lru_cache
 from typing import Any, Optional
 
-from orchestration.resolver.refs import ConfigRef
-from orchestration.resolver.resolver import Resolver
+from indw.config.loader import ConfigRef, Resolver, thaw
 
-DEFAULT_OBSERVABILITY_SPEC = 'data/observability/default'
+DEFAULT_OBSERVABILITY_SPEC = 'observability/default'
 
 @dataclass
 class ObservabilityThresholds:
@@ -68,6 +67,4 @@ class ObservabilityPolicyConfig:
 @lru_cache(maxsize=8)
 def _resolve_observability_cached(spec: str) -> ObservabilityPolicyConfig:
     resolved = Resolver.default().resolve(ConfigRef(kind='observability', id=spec))
-    from orchestration.resolver.immutable import thaw
-
     return ObservabilityPolicyConfig.from_dict(thaw(resolved.raw))

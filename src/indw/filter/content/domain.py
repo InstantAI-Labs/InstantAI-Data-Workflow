@@ -3,10 +3,9 @@ from __future__ import annotations
 import re
 from functools import lru_cache
 
-from orchestration.resolver.refs import ConfigRef
-from orchestration.resolver.resolver import Resolver
+from indw.config.loader import ConfigRef, Resolver
 
-DEFAULT_DOMAIN_MAP_SPEC = 'data/sources/domain_map'
+DEFAULT_DOMAIN_MAP_SPEC = 'sources/domain_map'
 
 @lru_cache(maxsize=1)
 def _domain_policy() -> dict:

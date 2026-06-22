@@ -6,11 +6,9 @@ from functools import lru_cache
 from typing import Any
 from urllib.parse import urlparse
 
-from orchestration.resolver.immutable import thaw
-from orchestration.resolver.refs import ConfigRef
-from orchestration.resolver.resolver import Resolver
+from indw.config.loader import ConfigRef, Resolver, thaw
 
-DEFAULT_SOURCE_POLICY_SPEC = 'data/licensing/sources'
+DEFAULT_SOURCE_POLICY_SPEC = 'licensing/sources'
 
 def _license_map(raw: dict[str, Any]) -> dict[str, tuple[str, float]]:
     out: dict[str, tuple[str, float]] = {}

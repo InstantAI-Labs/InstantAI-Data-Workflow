@@ -4,9 +4,7 @@ from dataclasses import dataclass, field
 import os
 from typing import Any
 
-from orchestration.resolver.refs import ConfigRef
-from orchestration.resolver.resolver import Resolver
-from orchestration.resolver.immutable import thaw
+from indw.config.loader import ConfigRef, Resolver, thaw
 
 @dataclass(frozen=True)
 class CurriculumStage:

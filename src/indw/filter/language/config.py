@@ -5,10 +5,9 @@ from dataclasses import dataclass, field
 from typing import Any, Optional
 
 from indw.config.defaults import LANGUAGE_MIN_CONFIDENCE
-from orchestration.resolver.refs import ConfigRef
-from orchestration.resolver.resolver import Resolver
+from indw.config.loader import ConfigRef, Resolver, thaw
 
-DEFAULT_LANGUAGE_SPEC = 'data/language/identification'
+DEFAULT_LANGUAGE_SPEC = 'language/identification'
 
 
 @dataclass
@@ -64,8 +63,6 @@ class LanguagePolicyConfig:
             if cached is not None:
                 return deepcopy(cached)
         resolved = Resolver.default().resolve(ConfigRef(kind='language', id=spec))
-        from orchestration.resolver.immutable import thaw
-
         cfg = cls.from_dict(thaw(resolved.raw))
         if spec == DEFAULT_LANGUAGE_SPEC:
             _set_resolved_language_policy(cfg)
