@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Callable, Optional
 
-from tokenizer.special_tokens import TranscriptBuilder, wrap_block
+from indw.ingest.transcript import TranscriptBuilder, wrap_block
 
 
 def plain_text(row: dict[str, Any], field: str = 'text') -> str:

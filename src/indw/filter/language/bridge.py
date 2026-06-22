@@ -6,7 +6,7 @@ from typing import Any, Optional
 
 from indw.filter.language.script import ScriptProfile, analyze_script_profile
 from indw.filter.language.telemetry import encode_text_ids
-from tokenizer import TokenizerRuntimeMetrics, measure_tokenizer_runtime
+from indw.filter.language.token_metrics import TokenizerRuntimeMetrics, measure_tokenizer_runtime
 
 @dataclass
 class LiveTokenizerEncoder:

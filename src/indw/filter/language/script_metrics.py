@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from typing import Any, Optional
 
 from indw.filter.language.script import ScriptProfile
-from tokenizer import TokenizerRuntimeMetrics
+from indw.filter.language.token_metrics import TokenizerRuntimeMetrics
 
 @dataclass
 class MultilingualMetrics:
@@ -74,7 +74,7 @@ def compute_multilingual_metrics(
     runtime = tokenizer_runtime
 
     if runtime is None and tokenizer_ids:
-        from tokenizer import measure_tokenizer_runtime
+        from indw.filter.language.token_metrics import measure_tokenizer_runtime
 
         runtime = measure_tokenizer_runtime(
             text,
