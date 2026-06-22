@@ -7,7 +7,7 @@ name = "indw"
 version = "1.0"
 description = "INDW — Instant Data Workflow: corpus ingestion, quality filtering, semantic cleaning, deduplication, and deterministic merge scheduling"
 readme = "README.md"
-license = { text = "Apache-2.0" }
+license = "Apache-2.0"
 license-files = ["LICENSE", "NOTICE"]
 requires-python = ">=3.10"
 authors = [{ name = "INDW Contributors" }]
@@ -15,7 +15,6 @@ keywords = ["indw", "nlp", "corpus", "data-pipeline", "dedup", "ml-data"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -51,9 +50,11 @@ all = ["indw[dev,language,dedup,ann,compress,embedding,distributed,monitor]"]
 indw = "app.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/indw/indw"
-Documentation = "https://github.com/indw/indw/blob/main/docs/README.md"
-Repository = "https://github.com/indw/indw"
+Homepage = "https://developers.udinmo.com/"
+Documentation = "https://developers.udinmo.com/docs/data-workflow/getting-started/overview"
+Repository = "https://github.com/InstantAI-Labs/InstantAI-Data-Workflow"
+Issues = "https://github.com/InstantAI-Labs/InstantAI-Data-Workflow/issues"
+Changelog = "https://github.com/InstantAI-Labs/InstantAI-Data-Workflow/blob/main/CHANGELOG.md"
 
 [tool.setuptools.packages.find]
 where = ["src", "."]

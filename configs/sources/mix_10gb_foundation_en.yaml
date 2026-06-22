@@ -1,0 +1,77 @@
+meta:
+  id: data/sources/mix_10gb_foundation_en
+  description: >
+    English foundation pretraining mix from centralized corpus/raw.
+    Natural web, wiki, books, math, code, government/legal text.
+    Excludes instruction tuning, synthetic QA, Cosmopedia, Stack Exchange,
+    and non-English Wikipedia.
+
+budget_bytes: 12000000000
+
+# Included only — merge with --incremental using these names against existing raw/.
+# Excluded from this profile (still on disk, not merged):
+#   open-orca-instruct, stack-exchange, cosmopedia-v2,
+#   wikipedia-de, wikipedia-es, wikipedia-fr, wikipedia-hi, wikipedia-ar
+
+sources:
+  - name: fineweb-edu
+    hf_id: HuggingFaceFW/fineweb-edu
+    hf_name: sample-10BT
+    split: train
+    streaming: true
+    mix_pct: 25
+    text_field: text
+
+  - name: fineweb
+    hf_id: HuggingFaceFW/fineweb
+    hf_name: sample-10BT
+    split: train
+    streaming: true
+    mix_pct: 15
+    text_field: text
+
+  - name: wikipedia-en
+    hf_id: wikimedia/wikipedia
+    hf_config: 20231101.en
+    split: train
+    streaming: true
+    mix_pct: 13
+    text_field: text
+    license: CC-BY-SA
+
+  - name: dclm
+    hf_id: mlfoundations/dclm-baseline-1.0
+    split: train
+    streaming: true
+    mix_pct: 9
+    text_field: text
+
+  - name: gutenberg
+    hf_id: sedthh/gutenberg_english
+    split: train
+    streaming: true
+    mix_pct: 7
+    text_field: TEXT
+
+  - name: open-web-math
+    hf_id: open-web-math/open-web-math
+    split: train
+    streaming: true
+    mix_pct: 9
+    text_field: text
+
+  - name: starcoder-python
+    hf_id: bigcode/starcoderdata
+    split: train
+    streaming: true
+    mix_pct: 15
+    text_field: content
+    languages: [python]
+
+  - name: starcoder-javascript
+    hf_id: bigcode/starcoderdata
+    split: train
+    streaming: true
+    mix_pct: 8
+    text_field: content
+    languages: [javascript]

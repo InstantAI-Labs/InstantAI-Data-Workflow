@@ -1,0 +1,20 @@
+version: instant-observability-v1
+enabled: true
+
+output_dir: artifacts/data/observability
+
+thresholds:
+  duplicate_rate_increase: 0.05
+  quality_score_decrease: 0.05
+  toxicity_rate_increase: 0.02
+  pii_rate_increase: 0.01
+  language_mix_l1: 0.15
+  source_imbalance_l1: 0.20
+
+severity:
+  critical_regressions: 2
+  warning_relative_delta: 0.08
+
+validation:
+  min_regression_detection_accuracy: 0.95
+  max_false_alert_rate: 0.05

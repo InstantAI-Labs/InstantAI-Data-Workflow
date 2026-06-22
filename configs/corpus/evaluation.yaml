@@ -1,0 +1,27 @@
+version: instant-corpus-evaluation-v1
+enabled: true
+
+output_dir: artifacts/data/corpus_evaluation
+
+promotion:
+  promote_min_score: 90
+  review_min_score: 80
+
+scoring_weights:
+  quality: 0.32
+  knowledge_density: 0.20
+  diversity: 0.18
+  safety: 0.15
+  deduplication: 0.15
+
+comparison:
+  min_quality_improvement: 0.02
+  max_duplicate_regression: 0.03
+  max_toxicity_regression: 0.01
+  max_pii_regression: 0.005
+  max_language_drift: 0.12
+  max_source_drift: 0.18
+
+validation:
+  min_promotion_accuracy: 0.95
+  max_false_promotion_rate: 0.05
