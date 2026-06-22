@@ -114,11 +114,11 @@ def sample_tokenizer_telemetry_by_bucket(
     target_chars_per_token: float = 3.2,
     bucket_map: Optional[dict[str, str]] = None,
 ) -> dict[str, Any]:
-    from tokenizers import Tokenizer
+    from indw.util.hf_tokenizers import load_tokenizer_file
 
     from indw.filter.language.script_policy import MultilingualPolicyConfig
 
-    tok = Tokenizer.from_file(str(tokenizer_path))
+    tok = load_tokenizer_file(tokenizer_path)
     mpol = MultilingualPolicyConfig(locale_bucket_map=bucket_map or {})
     telemetry = MultilingualTokenizerTelemetry()
     rng = random.Random(seed)

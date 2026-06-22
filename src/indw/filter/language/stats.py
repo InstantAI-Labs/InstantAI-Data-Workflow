@@ -4,9 +4,9 @@ from pathlib import Path
 from typing import Any, Optional
 
 def sample_tokenizer_efficiency(jsonl_path: Path, tokenizer_path: Path, *, max_samples: int=500, seed: int=42) -> dict[str, Any]:
-    from tokenizers import Tokenizer
+    from indw.util.hf_tokenizers import load_tokenizer_file
     import json
-    tok = Tokenizer.from_file(str(tokenizer_path))
+    tok = load_tokenizer_file(tokenizer_path)
     rng = random.Random(seed)
     ratios: list[float] = []
     frag: list[float] = []

@@ -17,7 +17,25 @@ The execution graph is INDW's single canonical representation of pipeline stages
 
 Documents enter the graph as rows from interleaved source streams. Each document carries a `MergeDocumentContext` that accumulates stage marks, rejection reasons, quality scores, and dedup hashes through the pipeline.
 
-<Flow nodesJSON='[{"id":"1","data":{"label":"Source Interleave"}},{"id":"2","data":{"label":"Stage0 Pool"}},{"id":"3","data":{"label":"Clean Pool"}},{"id":"4","data":{"label":"Extract Pool"}},{"id":"5","data":{"label":"Dedup Pool"}},{"id":"6","data":{"label":"Quality Gate"}},{"id":"7","data":{"label":"Apply"}}]' edgesJSON='[{"id":"e1-2","source":"1","target":"2"},{"id":"e2-3","source":"2","target":"3","animated":true},{"id":"e3-4","source":"3","target":"4"},{"id":"e4-5","source":"4","target":"5"},{"id":"e5-6","source":"5","target":"6"},{"id":"e6-7","source":"6","target":"7","animated":true}]' />
+<Flow
+  nodes={[
+    { id: "1", data: { label: "Source Interleave" } },
+    { id: "2", data: { label: "Stage0 Pool" } },
+    { id: "3", data: { label: "Clean Pool" } },
+    { id: "4", data: { label: "Extract Pool" } },
+    { id: "5", data: { label: "Dedup Pool" } },
+    { id: "6", data: { label: "Quality Gate" } },
+    { id: "7", data: { label: "Apply" } }
+  ]}
+  edges={[
+    { id: "e1-2", source: "1", target: "2" },
+    { id: "e2-3", source: "2", target: "3", animated: true },
+    { id: "e3-4", source: "3", target: "4" },
+    { id: "e4-5", source: "4", target: "5" },
+    { id: "e5-6", source: "5", target: "6" },
+    { id: "e6-7", source: "6", target: "7", animated: true }
+  ]}
+/>
 
 ## Stage marks
 

@@ -39,12 +39,14 @@ ann = ["faiss-cpu>=1.7.4"]
 compress = ["zstandard>=0.22.0"]
 embedding = ["sentence-transformers>=2.2.0"]
 distributed = ["dask>=2024.1.0", "distributed>=2024.1.0"]
+token = ["tokenizers>=0.15.0"]
+train = ["torch", "tokenizers>=0.15.0"]
 monitor = [
     "prometheus_client>=0.20.0",
     "opentelemetry-api>=1.24.0",
     "opentelemetry-sdk>=1.24.0",
 ]
-all = ["indw[dev,language,dedup,ann,compress,embedding,distributed,monitor]"]
+all = ["indw[dev,language,dedup,ann,compress,embedding,distributed,token,train,monitor]"]
 
 [project.scripts]
 indw = "app.cli:main"

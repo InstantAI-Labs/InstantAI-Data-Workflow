@@ -16,9 +16,9 @@ class LiveTokenizerEncoder:
 
     def _load(self) -> Any:
         if self._tokenizer is None:
-            from tokenizers import Tokenizer
+            from indw.util.hf_tokenizers import load_tokenizer_file
 
-            self._tokenizer = Tokenizer.from_file(str(Path(self.tokenizer_path)))
+            self._tokenizer = load_tokenizer_file(Path(self.tokenizer_path))
         return self._tokenizer
 
     def encode_metrics(

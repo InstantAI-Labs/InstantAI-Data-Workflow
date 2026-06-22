@@ -17,7 +17,25 @@ INDW deduplicates documents at three levels: exact content hash, fuzzy MinHash n
 | Fuzzy | MinHash LSH | Jaccard ≥ 0.90 (default) | `dedup` |
 | Semantic | Embedding + FAISS ANN | Hamming ≤ 4 (default) | `ann`, `embedding` |
 
-<Flow nodesJSON='[{"id":"1","data":{"label":"Document","icon":"📄"}},{"id":"2","data":{"label":"Exact Hash","icon":"🔑"}},{"id":"3","data":{"label":"MinHash Fuzzy","icon":"🔀"}},{"id":"4","data":{"label":"Semantic Embed","icon":"🧠"}},{"id":"5","data":{"label":"Keep","icon":"✅","valid":true}},{"id":"6","data":{"label":"Drop Dup","icon":"🗑️","valid":false}}]' edgesJSON='[{"id":"e1-2","source":"1","target":"2"},{"id":"e2-3","source":"2","target":"3","label":"unique"},{"id":"e2-6","source":"2","target":"6","label":"exact dup","color":"#ef4444"},{"id":"e3-4","source":"3","target":"4","label":"unique"},{"id":"e3-6","source":"3","target":"6","label":"fuzzy dup","color":"#ef4444"},{"id":"e4-5","source":"4","target":"5","label":"unique","color":"#22c55e","animated":true},{"id":"e4-6","source":"4","target":"6","label":"semantic dup","color":"#ef4444"}]' />
+<Flow
+  nodes={[
+    { id: "1", data: { label: "Document", icon: "📄" } },
+    { id: "2", data: { label: "Exact Hash", icon: "🔑" } },
+    { id: "3", data: { label: "MinHash Fuzzy", icon: "🔀" } },
+    { id: "4", data: { label: "Semantic Embed", icon: "🧠" } },
+    { id: "5", data: { label: "Keep", icon: "✅", valid: true } },
+    { id: "6", data: { label: "Drop Dup", icon: "🗑️", valid: false } }
+  ]}
+  edges={[
+    { id: "e1-2", source: "1", target: "2" },
+    { id: "e2-3", source: "2", target: "3", label: "unique" },
+    { id: "e2-6", source: "2", target: "6", label: "exact dup", color: "#ef4444" },
+    { id: "e3-4", source: "3", target: "4", label: "unique" },
+    { id: "e3-6", source: "3", target: "6", label: "fuzzy dup", color: "#ef4444" },
+    { id: "e4-5", source: "4", target: "5", label: "unique", color: "#22c55e", animated: true },
+    { id: "e4-6", source: "4", target: "6", label: "semantic dup", color: "#ef4444" }
+  ]}
+/>
 
 ## Configuration
 

@@ -3,7 +3,6 @@ import logging
 from pathlib import Path
 from typing import Any
 import numpy as np
-from tokenizers import Tokenizer
 from indw.config.defaults import DEFAULT_WRITE_BUFFER_BYTES
 from indw.store.export.shard_meta import write_shard_meta
 from indw.store.export.splits import assign_split_for_key, validate_split_ratios
@@ -12,10 +11,12 @@ logger = logging.getLogger(__name__)
 READ_BUFFER_BYTES = DEFAULT_WRITE_BUFFER_BYTES
 
 def export_token_bins_fast(jsonl_path: str | Path, tokenizer_path: str | Path, output_dir: str | Path, shard_tokens: int=50000000, val_ratio: float=0.01, test_ratio: float=0.0, eos_token: str='<|endoftext|>', *, flush_tokens: int=2000000, replay_jsonl: str | Path | None=None, replay_ratio: float=0.0, replay_seed: int=42, shard_index_offset: int=0, val_shard_index_offset: int=0, test_shard_index_offset: int=0) -> dict[str, list[Path]]:
+    from indw.util.hf_tokenizers import load_tokenizer_file
+
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     jsonl_path = Path(jsonl_path)
-    tok = Tokenizer.from_file(str(tokenizer_path))
+    tok = load_tokenizer_file(tokenizer_path)
     eos_id = tok.token_to_id(eos_token)
     if eos_id is None:
         raise ValueError(f'eos token missing from vocab: {eos_token!r} tokenizer={tokenizer_path}')
