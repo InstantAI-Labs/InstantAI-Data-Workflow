@@ -8,8 +8,8 @@ from indw.store.export.config import DataPipelineConfig
 from indw.store.export.memmap_stream import resolve_shards
 from indw.store.export.packed_stream import _build_dataset
 from indw.store.export.prefetch import wrap_prefetch
-from training.packing.collate import collate_packed_batch, collate_varlen_batch
-from training.packing import PackingConfig
+from indw.store.export.packing.collate import collate_packed_batch, collate_varlen_batch
+from indw.store.export.packing import PackingConfig
 from indw.store.export.shard_meta import read_shard_meta
 
 def build_optimized_train_dataloader(

@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from core.runtime.stable_hash import stable_digest_hex
+from indw.util.stable_hash import stable_digest_hex
 
 @dataclass
 class CorpusMixturePlan:

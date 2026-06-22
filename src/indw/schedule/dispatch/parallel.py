@@ -38,7 +38,7 @@ from indw.store.corpus.registry import CorpusRegistry
 from indw.ingest.sink import BufferedJsonlWriter, DEFAULT_WRITE_BUFFER
 from indw.filter.spec.quality import QualityPipelineConfig
 from indw.schedule.state.artifacts import run_merge_finalize
-from monitoring.cpu import collect_cpu_stats
+from indw.schedule.monitor.cpu import collect_cpu_stats
 
 logger = logging.getLogger(__name__)
 
@@ -371,7 +371,7 @@ def merge_with_quality_parallel(
     )
 
     def _publish_metrics_snapshot(*, log_diagnostics: bool = False) -> None:
-        from monitoring.cpu import collect_cpu_stats
+        from indw.schedule.monitor.cpu import collect_cpu_stats
 
         cpu = collect_cpu_stats()
         coordinator.refresh_signals(

@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Any
 
 try:
-    from monitoring.cpu import collect_cpu_stats as _collect_cpu_stats
+    from indw.schedule.monitor.cpu import collect_cpu_stats as _collect_cpu_stats
 except Exception:
     def _collect_cpu_stats() -> Any:
         return type('CpuStats', (), {'utilization_pct': 0.0})()

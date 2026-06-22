@@ -222,7 +222,7 @@ def run_graph_merge(
         except Exception:
             rss = 0.0
         try:
-            from monitoring.cpu import collect_cpu_stats
+            from indw.schedule.monitor.cpu import collect_cpu_stats
             cpu_pct = collect_cpu_stats().utilization_pct or 0.0
         except Exception:
             cpu_pct = 0.0

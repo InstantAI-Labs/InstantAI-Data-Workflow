@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterator, Optional
 
-from core.runtime.stable_hash import stable_digest_int
+from indw.util.stable_hash import stable_digest_int
 from indw.schedule.mix.mixture_planner import document_sampling_weight
 from indw.schedule.mix.plan import CorpusMixturePlan
 from indw.schedule.mix.telemetry import stage_for_token_cursor

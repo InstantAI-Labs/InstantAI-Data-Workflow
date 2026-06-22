@@ -105,7 +105,7 @@ def bootstrap_merge_run(
     corpus_id = corpus_registry.corpus_id if corpus_registry else 'default'
     pipeline_metrics = None
     try:
-        from monitoring.metrics.pipeline_exporter import PipelineMetricsExporter
+        from indw.schedule.monitor.pipeline_exporter import PipelineMetricsExporter
         pipeline_metrics = PipelineMetricsExporter.begin_merge(
             corpus_id=corpus_id,
             fresh=fresh,

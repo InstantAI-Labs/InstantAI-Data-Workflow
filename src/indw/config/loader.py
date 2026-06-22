@@ -180,6 +180,7 @@ class Resolver:
         kinds = (
             'quality', 'pipeline', 'refining', 'safety', 'language',
             'observability', 'corpus', 'language_manifest', 'curriculum_manifest',
+            'dataset_sources',
         )
         reg = SchemaRegistry()
         for kind in kinds:

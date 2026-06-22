@@ -11,8 +11,8 @@ from indw.store.export.config import (
 )
 from indw.store.export.memmap_stream import resolve_shards
 from indw.store.export.shard_io import MemmapShardCache, fast_chunk_tensors, tokens_to_tensors
-from training.packing.binpack import DynamicSequencePacker, PackingStats, pack_density
-from training.packing import PackingConfig
+from indw.store.export.packing.binpack import DynamicSequencePacker, PackingStats, pack_density
+from indw.store.export.packing import PackingConfig
 
 class MultiSamplePackedDataset(IterableDataset):
 

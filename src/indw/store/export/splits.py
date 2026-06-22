@@ -10,7 +10,7 @@ def validate_split_ratios(val_ratio: float, test_ratio: float = 0.0) -> None:
         )
 
 def split_unit_fraction(key: str, *, seed: int) -> float:
-    from core.runtime.stable_hash import stable_digest_int
+    from indw.util.stable_hash import stable_digest_int
     bits = stable_digest_int({'seed': int(seed), 'key': str(key)}, bits=53)
     return bits / float(1 << 53)
 
