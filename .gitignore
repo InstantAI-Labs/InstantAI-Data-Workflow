@@ -40,7 +40,7 @@ env/
 
 # runtime / generated reports
 artifacts/
-reports/
+/reports/
 *.json
 !configs/**/*.yaml
 production_scale_audit.*

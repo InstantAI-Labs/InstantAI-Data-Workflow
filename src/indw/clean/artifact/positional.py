@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import math
 
-from indw.tools.reports.fast.stats import wilson_ci
+from indw.util.stats import wilson_ci
 
 def histogram_entropy(counts: list[int]) -> float:
     total = sum(counts)

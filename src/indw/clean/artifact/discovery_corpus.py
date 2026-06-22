@@ -16,7 +16,7 @@ from indw.clean.artifact.decompose import (
 )
 from indw.dedup.storage import connect_sqlite, run_locked
 from indw.config.defaults import DISCOVERY_FRAGMENT_CACHE_MAX
-from indw.tools.reports.fast.stats import wilson_ci
+from indw.util.stats import wilson_ci
 from indw.filter.score.signals import shannon_entropy
 
 import re
